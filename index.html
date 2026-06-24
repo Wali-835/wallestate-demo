@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Real estate without brokers</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Manrope',sans-serif;background:#ffffff;color:#1a1a1a}
+
+/* Nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid #e6e4df;position:sticky;top:0;background:#fff;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-wordmark{font-size:14px;font-weight:700;letter-spacing:5px;color:#1a1a1a}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:12px;font-weight:600;color:#6b6b6b;text-decoration:none;letter-spacing:.3px}
+.nav-links a:hover{color:#1a1a1a}
+.nav-cta{padding:9px 20px;border-radius:20px;background:#C9A84C;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer}
+
+/* Hero */
+.hero{padding:100px 40px 80px;max-width:1000px;margin:0 auto;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:#F5E9C8;color:#8B6914;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
+.hero-badge span{width:6px;height:6px;border-radius:50%;background:#C9A84C}
+.hero-title{font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;color:#1a1a1a}
+.hero-title em{font-style:normal;color:#C9A84C}
+.hero-sub{font-size:16px;color:#6b6b6b;line-height:1.7;max-width:520px;margin:0 auto 36px}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:14px 28px;border-radius:24px;background:#1a1a1a;color:#fff;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;display:inline-block}
+.btn-secondary{padding:14px 28px;border-radius:24px;background:#fff;color:#1a1a1a;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;display:inline-block;border:1.5px solid #e6e4df}
+.btn-gold{background:#C9A84C;color:#fff;border:none}
+
+/* Stats */
+.stats{display:flex;justify-content:center;gap:60px;padding:48px 40px;background:#f5f4f1;flex-wrap:wrap}
+.stat-val{font-size:36px;font-weight:800;color:#1a1a1a;letter-spacing:-1px}
+.stat-lbl{font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-weight:600}
+
+/* How it works */
+.section{padding:80px 40px;max-width:1000px;margin:0 auto}
+.section-cap{display:flex;flex-direction:column;align-items:center;margin-bottom:52px;text-align:center}
+.section-cap-line{width:32px;height:3px;background:#C9A84C;border-radius:2px;margin-bottom:14px}
+.section-cap-title{font-size:32px;font-weight:800;letter-spacing:-1px;color:#1a1a1a}
+.section-cap-sub{font-size:14px;color:#6b6b6b;margin-top:8px;max-width:480px;line-height:1.6}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px}
+.step{padding:28px;border-radius:10px;border:1px solid #e6e4df}
+.step-num{width:36px;height:36px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:14px}
+.step-title{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.step-sub{font-size:12px;color:#6b6b6b;line-height:1.6}
+.step.gold .step-num{background:#C9A84C}
+
+/* Demo cards */
+.demos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.demo-card{border-radius:10px;border:1px solid #e6e4df;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform .15s,box-shadow .15s}
+.demo-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px -10px rgba(0,0,0,.15)}
+.demo-card-top{padding:28px 24px 20px;background:#f5f4f1}
+.demo-icon{font-size:32px;margin-bottom:10px}
+.demo-title{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.demo-sub{font-size:11px;color:#9a9a9a;line-height:1.5}
+.demo-card-bot{padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.demo-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#C9A84C}
+.demo-arrow{font-size:14px;color:#C9A84C}
+
+/* Why WallEstate */
+.why{background:#1a1a1a;padding:80px 40px;color:#fff}
+.why-inner{max-width:1000px;margin:0 auto}
+.why-title{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.why-sub{font-size:14px;color:#9a9a9a;margin-bottom:48px}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px}
+.why-item{padding:24px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.why-icon{font-size:24px;margin-bottom:12px}
+.why-item-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px}
+.why-item-sub{font-size:12px;color:#9a9a9a;line-height:1.6}
+.gold-text{color:#C9A84C}
+
+/* Verified banner */
+.verified-banner{background:#F5E9C8;border-top:1px solid #e8d9a0;border-bottom:1px solid #e8d9a0;padding:14px 40px;text-align:center;font-size:12px;font-weight:700;color:#8B6914;letter-spacing:.5px}
+
+/* Footer */
+footer{padding:32px 40px;border-top:1px solid #e6e4df;display:flex;align-items:center;justify-content:space-between;flex-wrap:gap;gap:16px}
+.footer-left{font-size:11px;color:#9a9a9a}
+.footer-logo{display:flex;align-items:center;gap:8px}
+.footer-wordmark{font-size:12px;font-weight:700;letter-spacing:4px;color:#9a9a9a}
+
+@media(max-width:600px){
+  nav{padding:14px 20px}
+  .hero{padding:60px 20px 48px}
+  .stats{gap:32px;padding:36px 20px}
+  .section{padding:52px 20px}
+  .why{padding:52px 20px}
+  footer{padding:24px 20px;flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 200 162" height="28"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+    <span class="nav-wordmark">WALLESTATE</span>
+  </div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#demos">Try it</a>
+    <a href="#why">Why WallEstate</a>
+    <a href="auth.html" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- Verified banner -->
+<div class="verified-banner">
+  ✦ Verified Owner Platform &mdash; Direct contact. No brokers. No commissions. Cairo &amp; Giza.
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge"><span></span>Beta — Cairo &amp; Giza</div>
+  <h1 class="hero-title">Real estate<br><em>without brokers</em></h1>
+  <p class="hero-sub">Connect directly with verified property owners in Cairo and Giza. No broker fees. No commissions. Just owners and buyers, directly.</p>
+  <div class="hero-actions">
+    <a href="auth.html" class="btn-primary btn-gold">List Your Property</a>
+    <a href="listings.html" class="btn-secondary">Browse Listings</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div style="text-align:center">
+    <div class="stat-val">2.5%</div>
+    <div class="stat-lbl">Broker fee you save</div>
+  </div>
+  <div style="text-align:center">
+    <div class="stat-val">EGP 0</div>
+    <div class="stat-lbl">Commission charged</div>
+  </div>
+  <div style="text-align:center">
+    <div class="stat-val">100%</div>
+    <div class="stat-lbl">Owner direct listings</div>
+  </div>
+  <div style="text-align:center">
+    <div class="stat-val">Cairo</div>
+    <div class="stat-lbl">&amp; Giza — launching now</div>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="section" id="how">
+  <div class="section-cap">
+    <div class="section-cap-line"></div>
+    <div class="section-cap-title">How WallEstate works</div>
+    <div class="section-cap-sub">Three steps to find or sell your property — directly, without paying anyone in the middle</div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Owner lists directly</div>
+      <div class="step-sub">Verified property owners create listings with photos, price, and details. Identity and ownership are verified before going live.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Buyer contacts owner</div>
+      <div class="step-sub">Buyers browse freely and message owners directly. Phone numbers stay masked until the owner chooses to share them.</div>
+    </div>
+    <div class="step gold">
+      <div class="step-num">3</div>
+      <div class="step-title">Deal happens directly</div>
+      <div class="step-sub">Owner and buyer agree terms, schedule viewings, and close — keeping 100% of the value between themselves. Zero commission.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Demo cards -->
+<div class="section" id="demos" style="padding-top:0">
+  <div class="section-cap">
+    <div class="section-cap-line"></div>
+    <div class="section-cap-title">Try the beta</div>
+    <div class="section-cap-sub">These demos are connected to our live database — everything you do is real</div>
+  </div>
+  <div class="demos">
+    <a href="auth.html" class="demo-card">
+      <div class="demo-card-top">
+        <div class="demo-icon">🔐</div>
+        <div class="demo-title">Create an account</div>
+        <div class="demo-sub">Sign up as an owner or buyer. Phone verification powered by Twilio.</div>
+      </div>
+      <div class="demo-card-bot">
+        <span class="demo-label">Get started</span>
+        <span class="demo-arrow">→</span>
+      </div>
+    </a>
+    <a href="listings.html" class="demo-card">
+      <div class="demo-card-top">
+        <div class="demo-icon">🏠</div>
+        <div class="demo-title">List a property</div>
+        <div class="demo-sub">Create a real listing with photos, amenities, and pricing. Saved directly to our database.</div>
+      </div>
+      <div class="demo-card-bot">
+        <span class="demo-label">For owners</span>
+        <span class="demo-arrow">→</span>
+      </div>
+    </a>
+    <a href="messaging.html" class="demo-card">
+      <div class="demo-card-top">
+        <div class="demo-icon">💬</div>
+        <div class="demo-title">Message an owner</div>
+        <div class="demo-sub">See masked contact info, broker language detection, and owner-controlled contact sharing.</div>
+      </div>
+      <div class="demo-card-bot">
+        <span class="demo-label">For buyers</span>
+        <span class="demo-arrow">→</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Why WallEstate -->
+<div class="why" id="why">
+  <div class="why-inner">
+    <div class="why-title">Why <span class="gold-text">WallEstate</span></div>
+    <div class="why-sub">Built for Cairo and Giza. Designed around owners, not brokers.</div>
+    <div class="why-grid">
+      <div class="why-item">
+        <div class="why-icon">✦</div>
+        <div class="why-item-title">Zero commission</div>
+        <div class="why-item-sub">Owners save 2.5% on every deal. On a 3M EGP apartment that's EGP 75,000 back in your pocket.</div>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">🔒</div>
+        <div class="why-item-title">Masked contact</div>
+        <div class="why-item-sub">Your phone number stays private. Only share it when you're ready — you stay in control throughout.</div>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">🤖</div>
+        <div class="why-item-title">AI broker detection</div>
+        <div class="why-item-sub">Every message is screened for broker language in Arabic and English. Brokers are flagged and removed automatically.</div>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">📊</div>
+        <div class="why-item-title">Developments analyser</div>
+        <div class="why-item-sub">AI-powered analysis of off-plan projects — ROI estimates, developer track records, and market comparisons.</div>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">🇪🇬</div>
+        <div class="why-item-title">Built for Egypt</div>
+        <div class="why-item-sub">Fully bilingual Arabic and English with RTL support. Designed for how Egyptians actually buy and rent property.</div>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">✓</div>
+        <div class="why-item-title">Verified owners only</div>
+        <div class="why-item-sub">Every owner is identity and ownership verified before their listing goes live. No fake listings, no ghost properties.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">
+    <svg viewBox="0 0 200 162" height="22"><rect x="2" y="58" width="42" height="97" rx="2" fill="#9a9a9a"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#9a9a9a"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#9a9a9a"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#9a9a9a"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#9a9a9a"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#9a9a9a"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+    <span class="footer-wordmark">WALLESTATE</span>
+  </div>
+  <div class="footer-left">© 2026 WallEstate. Cairo & Giza, Egypt. Beta version.</div>
+  <div class="footer-left">Real estate without brokers.</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Auth Flow Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:#e7e4dd;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:380px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px -20px rgba(0,0,0,.25)}
+.hdr{padding:24px 24px 18px;text-align:center;border-bottom:1px solid #e6e4df}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.wm{font-size:16px;font-weight:700;letter-spacing:4px;color:#1a1a1a}
+.dot{width:4px;height:4px;border-radius:50%;background:#C9A84C}
+.sub{font-size:10px;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-top:4px}
+.body{padding:24px}
+.field{margin-bottom:14px}
+.label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9a9a9a;margin-bottom:5px;display:block}
+input{width:100%;padding:11px 13px;border-radius:6px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+input:focus{border-color:#C9A84C}
+.btn{width:100%;padding:12px;border-radius:22px;background:#1a1a1a;color:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;cursor:pointer;margin-top:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-gold{background:#C9A84C}
+.msg{padding:10px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;display:none}
+.msg.show{display:block}
+.msg-err{background:#FDEDEC;color:#C0392B;border:1px solid #f0c0ba}
+.msg-ok{background:#E6F9EE;color:#1E8449;border:1px solid #b8e6c8}
+.msg-info{background:#F5E9C8;color:#8B6914;border:1px solid #C9A84C}
+.foot{text-align:center;margin-top:16px;font-size:11px;color:#9a9a9a;cursor:pointer}
+.config{padding:14px;background:#fffbeb;border-bottom:1px solid #f0d080;font-size:11px;color:#8B6914;line-height:1.6}
+.config code{background:#fff;padding:1px 5px;border-radius:3px;font-size:10px}
+.otp-row{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.otp-box{width:42px;height:48px;text-align:center;font-size:18px;font-weight:700}
+.step-dot{display:flex;gap:4px;justify-content:center;margin-bottom:18px}
+.step-dot span{width:6px;height:6px;border-radius:50%;background:#e6e4df}
+.step-dot span.act{background:#C9A84C}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="hdr">
+    <div class="logo">
+      <svg viewBox="0 0 200 162" height="26"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+      <span class="wm">WALLESTATE<span class="dot"></span></span>
+    </div>
+    <div class="sub" id="screenLabel">Create Account</div>
+  </div>
+
+  <div class="config" id="configBanner">
+    ⚙️ <strong>Setup needed:</strong> Replace <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> at the top of this file's script with your Supabase project credentials (Project Settings → API).
+  </div>
+
+  <div id="debugPanel" style="background:#1a1a1a;color:#C9A84C;font-family:monospace;font-size:10px;padding:10px 14px;max-height:140px;overflow-y:auto;line-height:1.6;display:none"></div>
+
+  <div class="body">
+
+    <!-- ── SCREEN 1: SIGN UP ── -->
+    <div id="screen-signup">
+      <div class="msg msg-err" id="signupErr"></div>
+      <div class="field">
+        <label class="label">Full Name</label>
+        <input type="text" id="fullName" placeholder="Jane Doe"/>
+      </div>
+      <div class="field">
+        <label class="label">Phone Number</label>
+        <input type="tel" id="phoneSignup" placeholder="+20 10 1234 5678"/>
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <input type="password" id="password" placeholder="••••••••"/>
+      </div>
+      <button class="btn" id="signupBtn" onclick="handleSignup()">Create Account</button>
+      <div class="foot" onclick="showScreen('login')">I already have an account</div>
+    </div>
+
+    <!-- ── SCREEN 2: LOG IN ── -->
+    <div id="screen-login" style="display:none">
+      <div class="msg msg-err" id="loginErr"></div>
+      <div class="field">
+        <label class="label">Phone Number</label>
+        <input type="tel" id="phoneLogin" placeholder="+20 10 1234 5678"/>
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <input type="password" id="passwordLogin" placeholder="••••••••"/>
+      </div>
+      <button class="btn" id="loginBtn" onclick="handleLogin()">Log In</button>
+      <div class="foot" onclick="showScreen('signup')">Create a new account</div>
+    </div>
+
+    <!-- ── SCREEN 3: BROWSING (logged in, unverified) ── -->
+    <div id="screen-browse" style="display:none">
+      <div class="msg msg-ok show">✓ Logged in — you can browse freely</div>
+      <div style="font-size:12px;color:#4a4a4a;line-height:1.7;margin-bottom:16px">
+        Welcome! You can search and view listings right away.<br><br>
+        Verification is only required when you:
+      </div>
+      <button class="btn" onclick="attemptAction('list')">Try: Create a Listing</button>
+      <button class="btn" style="margin-top:8px;background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df" onclick="attemptAction('contact')">Try: Contact an Owner</button>
+      <div class="foot" onclick="handleLogout()" style="margin-top:20px;color:#C0392B">Log out</div>
+    </div>
+
+    <!-- ── SCREEN 4: PHONE OTP VERIFICATION ── -->
+    <div id="screen-otp" style="display:none">
+      <div class="step-dot"><span class="act"></span><span></span></div>
+      <div class="msg msg-info show" id="otpContext">Verify your phone to continue</div>
+      <div class="msg msg-err" id="otpErr"></div>
+      <div style="font-size:12px;color:#4a4a4a;margin-bottom:14px;text-align:center">
+        Enter the 6-digit code sent to <strong id="otpPhoneDisplay"></strong>
+      </div>
+      <div class="otp-row">
+        <input class="otp-box" maxlength="1" data-i="0"/>
+        <input class="otp-box" maxlength="1" data-i="1"/>
+        <input class="otp-box" maxlength="1" data-i="2"/>
+        <input class="otp-box" maxlength="1" data-i="3"/>
+        <input class="otp-box" maxlength="1" data-i="4"/>
+        <input class="otp-box" maxlength="1" data-i="5"/>
+      </div>
+      <button class="btn btn-gold" id="verifyOtpBtn" onclick="handleVerifyOtp()">Verify Code</button>
+      <div class="foot" onclick="handleResendOtp()">Resend code</div>
+    </div>
+
+    <!-- ── SCREEN 5: IDENTITY VERIFICATION (owners only, for listing) ── -->
+    <div id="screen-identity" style="display:none">
+      <div class="step-dot"><span class="act"></span><span class="act"></span></div>
+      <div class="msg msg-info show">Phone verified ✓ — now verify your identity to list a property</div>
+      <div class="field">
+        <label class="label">National ID Number</label>
+        <input type="text" id="nationalId" placeholder="29001011234567"/>
+      </div>
+      <div style="padding:18px;border-radius:6px;border:2px dashed #e6e4df;text-align:center;font-size:12px;color:#9a9a9a;margin-bottom:14px;cursor:pointer">
+        📤 Upload ID Document (front & back)
+      </div>
+      <button class="btn btn-gold" onclick="handleIdentitySubmit()">Submit for Verification</button>
+      <div class="foot" onclick="showScreen('browse')">Cancel</div>
+    </div>
+
+    <!-- ── SCREEN 6: SUCCESS ── -->
+    <div id="screen-success" style="display:none">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:40px;margin-bottom:10px">✓</div>
+        <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:6px" id="successTitle">Verified!</div>
+        <div style="font-size:12px;color:#9a9a9a;line-height:1.6" id="successSub">You can now continue.</div>
+      </div>
+      <button class="btn" onclick="showScreen('browse')">Continue</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+//  SUPABASE CONFIG — replace with your project values
+//  Find these in: Supabase Dashboard → Project Settings → API
+// ════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+
+let sb = null;
+let pendingAction = null; // 'list' or 'contact' — what triggered verification
+let currentUser = null;
+
+if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  document.getElementById('configBanner').style.display = 'none';
+}
+
+// ── Visible debug logger ────────────────────────────────────────────────
+const debugPanel = document.getElementById('debugPanel');
+debugPanel.style.display = 'block';
+function dbg(label, data) {
+  const line = document.createElement('div');
+  const ts = new Date().toLocaleTimeString();
+  let dataStr = '';
+  try { dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data); }
+  catch(e) { dataStr = '[unserializable]'; }
+  line.textContent = '[' + ts + '] ' + label + (dataStr ? ': ' + dataStr : '');
+  debugPanel.appendChild(line);
+  debugPanel.scrollTop = debugPanel.scrollHeight;
+  console.log(label, data);
+}
+dbg('Client initialized', { hasClient: !!sb, url: SUPABASE_URL });
+
+function showScreen(name) {
+  ['signup','login','browse','otp','identity','success'].forEach(s => {
+    document.getElementById('screen-'+s).style.display = s===name ? 'block' : 'none';
+  });
+  const labels = {
+    signup:'Create Account', login:'Log In', browse:'Browse Freely',
+    otp:'Verify Phone', identity:'Verify Identity', success:'Verified'
+  };
+  document.getElementById('screenLabel').textContent = labels[name] || '';
+}
+
+function showErr(elId, msg) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideErr(elId) {
+  document.getElementById(elId).classList.remove('show');
+}
+
+// ── SIGNUP: phone + password only, no verification required ──────────────
+async function handleSignup() {
+  hideErr('signupErr');
+  const fullName = document.getElementById('fullName').value.trim();
+  const phone = document.getElementById('phoneSignup').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!fullName || !phone || !password) {
+    showErr('signupErr', 'Please fill in all fields.');
+    return;
+  }
+  if (password.length < 6) {
+    showErr('signupErr', 'Password must be at least 6 characters.');
+    return;
+  }
+  if (!sb) {
+    // Demo mode — simulate success
+    currentUser = { phone, fullName, phone_verified:false, verified:false };
+    showScreen('browse');
+    return;
+  }
+
+  document.getElementById('signupBtn').disabled = true;
+  document.getElementById('signupBtn').textContent = 'Creating account...';
+
+  dbg('Calling signUp', { phone });
+  const { data, error } = await sb.auth.signUp({
+    phone: phone,
+    password: password,
+    options: { data: { full_name: fullName } }
+  });
+  dbg('signUp response', { hasUser: !!data?.user, userId: data?.user?.id, hasSession: !!data?.session, error: error?.message });
+
+  document.getElementById('signupBtn').disabled = false;
+  document.getElementById('signupBtn').textContent = 'Create Account';
+
+  if (error) {
+    showErr('signupErr', error.message);
+    return;
+  }
+
+  if (!data.user || !data.user.id) {
+    showErr('signupErr', 'Account created but no user ID returned. Check Supabase Auth settings — phone confirmations may be required before a session is issued.');
+    console.error('Signup response:', data);
+    return;
+  }
+
+  // Account created — profile auto-created via trigger, phone_verified = false
+  // User can browse immediately, no OTP required at this stage
+  // Note: data.session may be null until phone is confirmed — that's fine,
+  // we only need the user.id to look up the profile row later.
+  currentUser = data.user;
+  dbg('currentUser set', { id: currentUser.id, phone: currentUser.phone });
+  showScreen('browse');
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+async function handleLogin() {
+  hideErr('loginErr');
+  const phone = document.getElementById('phoneLogin').value.trim();
+  const password = document.getElementById('passwordLogin').value;
+
+  if (!phone || !password) {
+    showErr('loginErr', 'Please enter phone and password.');
+    return;
+  }
+  if (!sb) {
+    currentUser = { phone, phone_verified:false, verified:false };
+    showScreen('browse');
+    return;
+  }
+
+  document.getElementById('loginBtn').disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ phone, password });
+  document.getElementById('loginBtn').disabled = false;
+
+  if (error) {
+    showErr('loginErr', error.message);
+    return;
+  }
+  currentUser = data.user;
+  showScreen('browse');
+}
+
+// ── ACTION GATE: triggered when user tries to list or contact ────────────
+async function attemptAction(action) {
+  dbg('attemptAction called', { action, hasSb: !!sb, hasCurrentUser: !!currentUser, userId: currentUser?.id });
+  pendingAction = action;
+
+  if (!sb) {
+    // Demo mode
+    document.getElementById('otpContext').textContent =
+      action === 'list'
+        ? 'Verify your phone to create a listing'
+        : 'Verify your phone to contact this owner';
+    document.getElementById('otpPhoneDisplay').textContent = currentUser?.phone || '+20 10 •••• 5678';
+    showScreen('otp');
+    return;
+  }
+
+  if (!currentUser || !currentUser.id) {
+    dbg('BLOCKED: no currentUser', {});
+    alert('No active session found. Please sign up or log in again.');
+    showScreen('signup');
+    return;
+  }
+
+  try {
+    // Check current verification status from profiles table
+    dbg('Querying profiles table', { userId: currentUser.id });
+    const { data: profile, error: profileErr } = await sb
+      .from('profiles')
+      .select('phone_verified, verified')
+      .eq('id', currentUser.id)
+      .single();
+    dbg('profiles query result', { profile, error: profileErr?.message, code: profileErr?.code });
+
+    if (profileErr) {
+      alert('Could not load your profile: ' + profileErr.message + '\n\nMost likely cause: no active Supabase session yet (phone confirmation may be required before login completes), so the database is blocking this request via Row Level Security. In Supabase: Authentication → Providers → Phone, check whether "Confirm phone" is required — for this action-gated flow, it should be OFF so users get a session immediately at signup.');
+      console.error('Profile fetch error:', profileErr);
+      return;
+    }
+
+    if (action === 'contact') {
+      if (profile.phone_verified) {
+        document.getElementById('successTitle').textContent = 'Ready to message';
+        document.getElementById('successSub').textContent = 'Your phone is verified — go ahead and contact the owner.';
+        showScreen('success');
+        return;
+      }
+      dbg('Sending OTP for contact action', {});
+      await sendOtp();
+      document.getElementById('otpContext').textContent = 'Verify your phone to contact this owner';
+      showScreen('otp');
+      return;
+    }
+
+    if (action === 'list') {
+      if (profile.phone_verified && profile.verified) {
+        document.getElementById('successTitle').textContent = 'Ready to list';
+        document.getElementById('successSub').textContent = 'You are fully verified — go ahead and create your listing.';
+        showScreen('success');
+        return;
+      }
+      if (!profile.phone_verified) {
+        dbg('Sending OTP for list action', {});
+        await sendOtp();
+        document.getElementById('otpContext').textContent = 'Verify your phone to create a listing';
+        showScreen('otp');
+        return;
+      }
+      // Phone verified but identity not — go straight to identity step
+      showScreen('identity');
+      return;
+    }
+  } catch (e) {
+    dbg('EXCEPTION in attemptAction', { message: e.message });
+    alert('Unexpected error: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── SEND OTP via Supabase (uses Twilio under the hood) ────────────────────
+async function sendOtp() {
+  if (!sb) return;
+  dbg('Calling signInWithOtp', { phone: currentUser.phone });
+  const { data, error } = await sb.auth.signInWithOtp({ phone: currentUser.phone });
+  dbg('signInWithOtp response', { data, error: error?.message, status: error?.status, code: error?.code });
+  if (error) {
+    alert('Failed to send OTP: ' + error.message);
+  }
+  document.getElementById('otpPhoneDisplay').textContent = currentUser.phone;
+}
+
+async function handleResendOtp() {
+  hideErr('otpErr');
+  await sendOtp();
+  showErr('otpErr', 'Code resent.');
+  document.getElementById('otpErr').classList.remove('msg-err');
+  document.getElementById('otpErr').classList.add('msg-ok');
+}
+
+// ── VERIFY OTP ─────────────────────────────────────────────────────────────
+async function handleVerifyOtp() {
+  hideErr('otpErr');
+  const boxes = document.querySelectorAll('.otp-box');
+  const code = Array.from(boxes).map(b => b.value).join('');
+
+  if (code.length !== 6) {
+    showErr('otpErr', 'Enter all 6 digits.');
+    return;
+  }
+
+  if (!sb) {
+    // Demo mode — accept any 6 digits
+    currentUser.phone_verified = true;
+    if (pendingAction === 'contact') {
+      document.getElementById('successTitle').textContent = 'Phone Verified!';
+      document.getElementById('successSub').textContent = 'You can now message the property owner directly.';
+      showScreen('success');
+    } else {
+      showScreen('identity'); // owner flow continues to identity check
+    }
+    return;
+  }
+
+  const { data, error } = await sb.auth.verifyOtp({
+    phone: currentUser.phone,
+    token: code,
+    type: 'sms'
+  });
+
+  if (error) {
+    showErr('otpErr', error.message);
+    return;
+  }
+
+  // Update phone_verified in profiles table
+  await sb
+    .from('profiles')
+    .update({ phone_verified: true })
+    .eq('id', currentUser.id);
+
+  if (pendingAction === 'contact') {
+    document.getElementById('successTitle').textContent = 'Phone Verified!';
+    document.getElementById('successSub').textContent = 'You can now message the property owner directly.';
+    showScreen('success');
+  } else {
+    showScreen('identity'); // continue to identity verification for listing
+  }
+}
+
+// ── IDENTITY VERIFICATION (owners, for listing) ───────────────────────────
+async function handleIdentitySubmit() {
+  const nationalId = document.getElementById('nationalId').value.trim();
+  if (!nationalId) {
+    alert('Please enter your National ID number.');
+    return;
+  }
+
+  if (!sb) {
+    document.getElementById('successTitle').textContent = 'Submitted for Review';
+    document.getElementById('successSub').textContent = 'Our team will verify your identity within 24 hours. You will be notified once approved.';
+    showScreen('success');
+    return;
+  }
+
+  // Insert into ownership_verifications table (pending admin review)
+  await sb.from('ownership_verifications').insert({
+    owner_id: currentUser.id,
+    property_ref: 'pending',
+    method: 'registry',
+    status: 'pending'
+  });
+
+  // Store hashed national ID on profile (hash client-side in production)
+  await sb
+    .from('profiles')
+    .update({ national_id: nationalId })
+    .eq('id', currentUser.id);
+
+  document.getElementById('successTitle').textContent = 'Submitted for Review';
+  document.getElementById('successSub').textContent = 'Our team will verify your identity within 24 hours. You will be notified once approved.';
+  showScreen('success');
+}
+
+async function handleLogout() {
+  if (sb) await sb.auth.signOut();
+  currentUser = null;
+  showScreen('signup');
+}
+
+// OTP box auto-advance
+document.querySelectorAll('.otp-box').forEach((box, i, all) => {
+  box.addEventListener('input', () => {
+    if (box.value && i < all.length - 1) all[i+1].focus();
+  });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !box.value && i > 0) all[i-1].focus();
+  });
+});
+</script>
+</body>
+</html>

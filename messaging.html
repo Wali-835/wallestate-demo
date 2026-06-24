@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Messaging Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:#e7e4dd;min-height:100vh;padding:20px}
+.wrap{max-width:1000px;margin:0 auto}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.wm{font-size:15px;font-weight:700;letter-spacing:4px;color:#1a1a1a}
+.tag{font-size:9px;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+#debugPanel{background:#1a1a1a;color:#C9A84C;font-family:monospace;font-size:10px;padding:10px 14px;max-height:130px;overflow-y:auto;line-height:1.6;border-radius:8px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden}
+.card-h{padding:12px 16px;border-bottom:1px solid #e6e4df;display:flex;align-items:center;justify-content:space-between}
+.card-h h2{font-size:12px;font-weight:700;color:#1a1a1a}
+.card-b{padding:14px}
+label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:4px;display:block}
+input,select{width:100%;padding:9px 11px;border-radius:6px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:12px;color:#1a1a1a;outline:none;margin-bottom:8px}
+input:focus{border-color:#C9A84C}
+.btn{padding:9px 16px;border-radius:20px;background:#C9A84C;color:#fff;font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;width:100%}
+.btn-dark{background:#1a1a1a}
+.btn-ghost{background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df}
+.btn-sm{width:auto;padding:5px 12px;font-size:9px}
+.pill{display:inline-block;padding:3px 9px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.pill-green{background:#E6F9EE;color:#1E8449}
+.pill-gold{background:#F5E9C8;color:#8B6914}
+.pill-gray{background:#f5f4f1;color:#9a9a9a}
+.msg-row{display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
+.bubble{max-width:78%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.5;word-break:break-word}
+.bubble-buyer{background:#1a1a1a;color:#fff;border-radius:10px 10px 10px 2px;align-self:flex-end}
+.bubble-owner{background:#f5f4f1;color:#1a1a1a;border-radius:10px 10px 2px 10px;align-self:flex-start}
+.bubble-flagged{border:1px solid #f0c0ba}
+.bubble-time{font-size:9px;color:#9a9a9a;margin-top:2px}
+.chat-area{height:260px;overflow-y:auto;padding:12px;background:#fafaf8;border-radius:8px;border:1px solid #e6e4df;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.chat-input-row{display:flex;gap:6px}
+.chat-input-row input{margin-bottom:0;flex:1}
+.chat-send{width:auto;padding:9px 14px;border-radius:20px;border:none;cursor:pointer;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;background:#C9A84C;color:#fff;flex-shrink:0}
+.chat-send:disabled{opacity:.4;cursor:not-allowed}
+.unlock-banner{padding:8px 12px;background:#E6F9EE;border:1px solid #b8e6c8;border-radius:6px;font-size:11px;color:#1E8449;font-weight:600;text-align:center;margin-bottom:10px;display:none}
+.lock-banner{padding:8px 12px;background:#F5E9C8;border:1px solid #C9A84C;border-radius:6px;font-size:11px;color:#8B6914;text-align:center;margin-bottom:10px}
+.report-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.report-btn{padding:4px 10px;border-radius:14px;border:1px solid #f0c0ba;background:#fff;color:#C0392B;font-family:'Manrope',sans-serif;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+.listing-select{margin-bottom:10px}
+.stat-row{display:flex;gap:8px;margin-bottom:10px}
+.stat{flex:1;background:#f5f4f1;border-radius:6px;padding:8px;text-align:center}
+.stat-val{font-size:18px;font-weight:800;color:#1a1a1a}
+.stat-lbl{font-size:9px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.empty-chat{color:#9a9a9a;font-size:11px;text-align:center;margin:auto}
+.broker-flag{font-size:9px;color:#C0392B;padding:2px 6px;background:#FDEDEC;border-radius:3px;margin-top:2px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="logo">
+    <svg viewBox="0 0 200 162" height="24"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+    <span class="wm">WALLESTATE</span>
+  </div>
+  <span class="tag">Messaging Demo</span>
+</div>
+
+<div id="debugPanel"></div>
+
+<!-- Login panels -->
+<div class="grid">
+  <!-- Owner login -->
+  <div class="card">
+    <div class="card-h"><h2>🏠 Owner Account</h2><span id="ownerStatus" class="pill pill-gray">Not logged in</span></div>
+    <div class="card-b">
+      <label>Phone</label><input type="tel" id="ownerPhone" value="+201025899960"/>
+      <label>Password</label><input type="password" id="ownerPassword"/>
+      <button class="btn btn-dark" onclick="loginOwner()">Log in as Owner</button>
+    </div>
+  </div>
+  <!-- Buyer login -->
+  <div class="card">
+    <div class="card-h"><h2>🔍 Buyer Account</h2><span id="buyerStatus" class="pill pill-gray">Not logged in</span></div>
+    <div class="card-b">
+      <label>Phone (different number)</label><input type="tel" id="buyerPhone" placeholder="+20XXXXXXXXXX"/>
+      <label>Password</label><input type="password" id="buyerPassword"/>
+      <button class="btn" onclick="loginBuyer()">Log in as Buyer</button>
+      <button class="btn btn-ghost" style="margin-top:6px" onclick="signupBuyer()">Sign up new Buyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Conversation setup -->
+<div class="card" style="margin-bottom:14px">
+  <div class="card-h"><h2>Start Conversation</h2><span id="convStatus" class="pill pill-gray">No conversation</span></div>
+  <div class="card-b">
+    <div class="grid" style="margin-bottom:8px">
+      <div>
+        <label>Select Listing (from owner account)</label>
+        <select id="listingSelect"><option value="">— load listings after owner logs in —</option></select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn" style="margin-bottom:0" onclick="startConversation()">Start / Load Conversation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chat interface -->
+<div class="card">
+  <div class="card-h">
+    <h2>💬 Masked Chat</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="stat-row" style="margin:0;gap:6px">
+        <div class="stat" style="padding:4px 10px"><div class="stat-val" id="ownerMsgCount">0</div><div class="stat-lbl">Owner msgs</div></div>
+        <div class="stat" style="padding:4px 10px"><div class="stat-val" id="buyerMsgCount">0</div><div class="stat-lbl">Buyer msgs</div></div>
+      </div>
+      <span id="unlockPill" class="pill pill-gray">🔒 Locked</span>
+    </div>
+  </div>
+  <div class="card-b">
+    <div id="lockBanner" class="lock-banner">🔒 Contact details are hidden. Buyer can request to share — owner decides when to unlock.</div>
+    <div id="requestedBanner" class="lock-banner" style="display:none;background:#FEF5E7;border-color:#E67E22;color:#784212">📩 Buyer has requested contact sharing. Owner can approve below.</div>
+    <div id="unlockBanner" class="unlock-banner">✅ Contact unlocked — both parties can now share phone numbers directly.</div>
+    <!-- Owner controls -->
+    <div id="ownerControls" style="display:none;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#9a9a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Owner Controls</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" id="approveBtn" onclick="approveUnlock()" style="background:#1E8449">✓ Share My Contact</button>
+        <button class="btn btn-sm btn-ghost" onclick="revokeUnlock()">✕ Revoke</button>
+      </div>
+    </div>
+    <!-- Buyer controls -->
+    <div id="buyerControls" style="display:none;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#9a9a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Buyer Controls</div>
+      <button class="btn btn-sm btn-ghost" id="requestBtn" onclick="requestUnlock()">📩 Request Contact Info</button>
+    </div>
+    <div class="chat-area" id="chatArea"><div class="empty-chat">Start a conversation above to see messages here.</div></div>
+
+    <!-- Buyer sends -->
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;color:#9a9a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Send as Buyer</div>
+      <div class="chat-input-row">
+        <input type="text" id="buyerMsg" placeholder="Type a message as buyer..." onkeydown="if(event.key==='Enter')sendMsg('buyer')"/>
+        <button class="chat-send" id="buyerSendBtn" onclick="sendMsg('buyer')">Send</button>
+      </div>
+    </div>
+
+    <!-- Owner sends -->
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;color:#9a9a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Send as Owner</div>
+      <div class="chat-input-row">
+        <input type="text" id="ownerMsg" placeholder="Type a message as owner..." onkeydown="if(event.key==='Enter')sendMsg('owner')"/>
+        <button class="chat-send btn-dark" id="ownerSendBtn" onclick="sendMsg('owner')" style="background:#1a1a1a">Send</button>
+      </div>
+    </div>
+
+    <div class="report-row">
+      <button class="report-btn" onclick="reportBroker()">⚑ Report as broker</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadMessages()">↺ Refresh</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+
+let sbOwner = null;   // Supabase client authenticated as owner
+let sbBuyer = null;   // Supabase client authenticated as buyer
+let ownerUser = null;
+let buyerUser = null;
+let currentConvId = null;
+let pollingInterval = null;
+
+// Two separate Supabase clients — one per user role
+sbOwner = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+sbBuyer = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const debugPanel = document.getElementById('debugPanel');
+function dbg(label, data) {
+  const line = document.createElement('div');
+  const ts = new Date().toLocaleTimeString();
+  let s = '';
+  try { s = data !== undefined ? ': ' + JSON.stringify(data) : ''; } catch(e) { s = ''; }
+  line.textContent = '[' + ts + '] ' + label + s;
+  debugPanel.appendChild(line);
+  debugPanel.scrollTop = debugPanel.scrollHeight;
+}
+dbg('Clients initialized', {});
+
+// ── BROKER LANGUAGE DETECTOR ─────────────────────────────────────────────
+const BROKER_PATTERNS = [
+  // English — direct broker signals
+  /\bcommission\b/i, /\bbroker\b/i, /\bagent\b/i, /\brealtor\b/i,
+  /2%|2\.5%|3%|finder.?fee/i,
+  /list.*with.*me/i, /i have clients/i, /we have clients/i,
+  /i can find you/i, /marketing fee/i, /referral fee/i,
+  /i represent/i, /my clients/i, /several clients/i,
+  /interested buyers/i, /potential buyers/i,
+  // Arabic — broker signals
+  /عمولة/i, /سمسار/i, /وسيط/i, /دلال/i,
+  /عندي عملاء/i, /لدي عملاء/i, /عملاء مهتمين/i,
+  /نسبة|كوميشن/i,
+];
+
+function detectBrokerLanguage(text) {
+  return BROKER_PATTERNS.some(p => p.test(text));
+}
+
+// ── LOGIN OWNER ──────────────────────────────────────────────────────────
+async function loginOwner() {
+  const phone = document.getElementById('ownerPhone').value.trim();
+  const password = document.getElementById('ownerPassword').value;
+  dbg('Owner login', { phone });
+  const { data, error } = await sbOwner.auth.signInWithPassword({ phone, password });
+  if (error) { alert('Owner login failed: ' + error.message); return; }
+  ownerUser = data.user;
+  document.getElementById('ownerStatus').textContent = '● Online';
+  document.getElementById('ownerStatus').className = 'pill pill-green';
+  dbg('Owner logged in', { id: ownerUser.id });
+  loadOwnerListings();
+}
+
+// ── LOGIN BUYER ──────────────────────────────────────────────────────────
+async function loginBuyer() {
+  const phone = document.getElementById('buyerPhone').value.trim();
+  const password = document.getElementById('buyerPassword').value;
+  dbg('Buyer login', { phone });
+  const { data, error } = await sbBuyer.auth.signInWithPassword({ phone, password });
+  if (error) { alert('Buyer login failed: ' + error.message); return; }
+  buyerUser = data.user;
+  document.getElementById('buyerStatus').textContent = '● Online';
+  document.getElementById('buyerStatus').className = 'pill pill-green';
+  dbg('Buyer logged in', { id: buyerUser.id });
+
+  // Verify buyer's phone for messaging
+  await sbBuyer.from('profiles').update({ phone_verified: true }).eq('id', buyerUser.id);
+}
+
+async function signupBuyer() {
+  const phone = document.getElementById('buyerPhone').value.trim();
+  const password = document.getElementById('buyerPassword').value;
+  if (!phone || !password) { alert('Enter phone and password for buyer account.'); return; }
+  dbg('Buyer signup', { phone });
+  const { data, error } = await sbBuyer.auth.signUp({ phone, password, options: { data: { full_name: 'Test Buyer' } } });
+  if (error) { alert('Signup failed: ' + error.message); return; }
+  if (!data.user) { alert('Signup returned no user — check Supabase phone confirmation settings.'); return; }
+  buyerUser = data.user;
+  document.getElementById('buyerStatus').textContent = '● Online (new)';
+  document.getElementById('buyerStatus').className = 'pill pill-green';
+  dbg('Buyer signed up', { id: buyerUser.id });
+  // Mark phone verified so they can message
+  await sbBuyer.from('profiles').update({ phone_verified: true }).eq('id', buyerUser.id);
+  dbg('Buyer phone_verified set true', {});
+}
+
+// ── LOAD OWNER LISTINGS ──────────────────────────────────────────────────
+async function loadOwnerListings() {
+  if (!ownerUser) return;
+  const { data, error } = await sbOwner.from('listings').select('id,title,district,status').eq('owner_id', ownerUser.id).order('created_at', { ascending: false });
+  dbg('Owner listings', { count: data ? data.length : 0, error: error ? error.message : null });
+
+  const sel = document.getElementById('listingSelect');
+  if (!data || data.length === 0) {
+    sel.innerHTML = '<option value="">— no active listings found —</option>';
+    return;
+  }
+  sel.innerHTML = data.map(l => '<option value="' + l.id + '">' + l.title + ' · ' + l.district + ' [' + l.status + ']</option>').join('');
+}
+
+// ── START / LOAD CONVERSATION ────────────────────────────────────────────
+async function startConversation() {
+  if (!ownerUser) { alert('Log in as owner first.'); return; }
+  if (!buyerUser) { alert('Log in as buyer first.'); return; }
+
+  const listingId = document.getElementById('listingSelect').value;
+  if (!listingId) { alert('Select a listing first.'); return; }
+
+  dbg('Starting conversation', { listingId, buyerId: buyerUser.id, ownerId: ownerUser.id });
+
+  // Try to get existing conversation first
+  const { data: existing } = await sbBuyer
+    .from('conversations')
+    .select('*')
+    .eq('listing_id', listingId)
+    .eq('buyer_id', buyerUser.id)
+    .single();
+
+  if (existing) {
+    currentConvId = existing.id;
+    dbg('Existing conversation found', { convId: currentConvId });
+    updateConvStats(existing);
+  } else {
+    // Create new conversation as buyer
+    const { data: newConv, error } = await sbBuyer.from('conversations').insert({
+      listing_id: listingId,
+      owner_id: ownerUser.id,
+      buyer_id: buyerUser.id,
+    }).select().single();
+
+    if (error) {
+      dbg('Conversation create error', { error: error.message, code: error.code });
+      alert('Could not start conversation: ' + error.message + '\n\nIf error code is 42501, run the auth_update.sql to ensure the buyer RLS policy is in place, or manually set phone_verified=true for the buyer in the profiles table.');
+      return;
+    }
+    currentConvId = newConv.id;
+    dbg('New conversation created', { convId: currentConvId });
+    updateConvStats(newConv);
+  }
+
+  document.getElementById('convStatus').textContent = '● Active';
+  document.getElementById('convStatus').className = 'pill pill-green';
+  loadMessages();
+  startPolling();
+}
+
+function updateConvStats(conv) {
+  document.getElementById('ownerMsgCount').textContent = conv.owner_msg_count || 0;
+  document.getElementById('buyerMsgCount').textContent = conv.buyer_msg_count || 0;
+
+  const unlocked = !!conv.contact_unlocked;
+  const requested = !!conv.unlock_requested && !unlocked;
+
+  // Pill
+  document.getElementById('unlockPill').textContent = unlocked ? '🔓 Unlocked' : requested ? '📩 Requested' : '🔒 Locked';
+  document.getElementById('unlockPill').className = 'pill ' + (unlocked ? 'pill-green' : requested ? 'pill-gold' : 'pill-gray');
+
+  // Banners
+  document.getElementById('lockBanner').style.display = (!unlocked && !requested) ? 'block' : 'none';
+  document.getElementById('requestedBanner').style.display = requested ? 'block' : 'none';
+  document.getElementById('unlockBanner').style.display = unlocked ? 'block' : 'none';
+
+  // Controls
+  document.getElementById('ownerControls').style.display = ownerUser ? 'block' : 'none';
+  document.getElementById('buyerControls').style.display = (buyerUser && !unlocked) ? 'block' : 'none';
+
+  // Hide request button if already requested or unlocked
+  const reqBtn = document.getElementById('requestBtn');
+  if (reqBtn) reqBtn.style.display = (requested || unlocked) ? 'none' : 'inline-block';
+
+  // Hide approve button if already unlocked
+  const appBtn = document.getElementById('approveBtn');
+  if (appBtn) appBtn.style.display = unlocked ? 'none' : 'inline-block';
+}
+
+// ── SEND MESSAGE ─────────────────────────────────────────────────────────
+async function sendMsg(role) {
+  if (!currentConvId) { alert('Start a conversation first.'); return; }
+
+  const inputId = role === 'buyer' ? 'buyerMsg' : 'ownerMsg';
+  const content = document.getElementById(inputId).value.trim();
+  if (!content) return;
+
+  const senderId = role === 'buyer' ? buyerUser.id : ownerUser.id;
+  const client = role === 'buyer' ? sbBuyer : sbOwner;
+
+  const isFlagged = detectBrokerLanguage(content);
+  dbg('Sending message', { role, isFlagged, preview: content.substring(0, 40) });
+
+  const { error } = await client.from('messages').insert({
+    conversation_id: currentConvId,
+    sender_id: senderId,
+    content: content,
+    flagged: isFlagged,
+    flag_reason: isFlagged ? 'broker_language_detected' : null,
+  });
+
+  if (error) {
+    dbg('Message send error', { error: error.message, code: error.code });
+    alert('Message send failed: ' + error.message);
+    return;
+  }
+
+  document.getElementById(inputId).value = '';
+  loadMessages();
+}
+
+// ── LOAD MESSAGES ────────────────────────────────────────────────────────
+async function loadMessages() {
+  if (!currentConvId) return;
+
+  const { data: messages, error } = await sbOwner
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', currentConvId)
+    .order('created_at', { ascending: true });
+
+  if (error) { dbg('Load messages error', { error: error.message }); return; }
+
+  // Also refresh conversation stats
+  const { data: conv } = await sbOwner
+    .from('conversations')
+    .select('*')
+    .eq('id', currentConvId)
+    .single();
+
+  if (conv) updateConvStats(conv);
+
+  const area = document.getElementById('chatArea');
+
+  if (!messages || messages.length === 0) {
+    area.innerHTML = '<div class="empty-chat">No messages yet. Send the first one below.</div>';
+    return;
+  }
+
+  let html = '';
+  messages.forEach(function(m) {
+    const isOwner = m.sender_id === ownerUser.id;
+    const bubbleClass = isOwner ? 'bubble-owner' : 'bubble-buyer';
+    const flagClass = m.flagged ? ' bubble-flagged' : '';
+    const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const roleLabel = isOwner ? 'Owner' : 'Buyer';
+
+    html += '<div class="msg-row" style="align-items:' + (isOwner ? 'flex-start' : 'flex-end') + '">';
+    html += '<div class="bubble ' + bubbleClass + flagClass + '">' + escHtml(m.content) + '</div>';
+    if (m.flagged) {
+      html += '<span class="broker-flag">⚑ Broker language detected</span>';
+    }
+    html += '<div class="bubble-time">' + roleLabel + ' · ' + time + '</div>';
+    html += '</div>';
+  });
+
+  area.innerHTML = html;
+  area.scrollTop = area.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── REPORT AS BROKER ─────────────────────────────────────────────────────
+async function reportBroker() {
+  if (!currentConvId || !buyerUser) { alert('Start a conversation first.'); return; }
+
+  const reasons = [
+    ['acting_as_broker',    'Acting as a broker / agent'],
+    ['mentioned_commission','Mentioned commission or fees'],
+    ['pitching_services',   'Pitching their services'],
+    ['spam',                'Spam / mass messaging'],
+    ['other',               'Other'],
+  ];
+
+  const opts = reasons.map((r, i) => (i+1) + '. ' + r[1]).join('\n');
+  const choice = prompt('Why are you reporting this account?\n\n' + opts + '\n\nEnter number (1-5):');
+  if (!choice) return;
+
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= reasons.length) {
+    alert('Invalid choice. Enter a number between 1 and 5.');
+    return;
+  }
+
+  const reason = reasons[idx][0];
+  dbg('Submitting broker report', { reason });
+
+  const { error } = await sbBuyer.from('broker_reports').insert({
+    reported_by: buyerUser.id,
+    reported_user: ownerUser.id,
+    conversation_id: currentConvId,
+    reason: reason,
+    details: 'Reported from messaging demo',
+  });
+
+  if (error) { alert('Report failed: ' + error.message); return; }
+  dbg('Broker report submitted', { reason });
+  alert('Report submitted — ' + reasons[idx][1] + '. Our team will review within 24 hours.');
+}
+
+// ── CONTACT UNLOCK CONTROLS ─────────────────────────────────────────────
+async function requestUnlock() {
+  if (!currentConvId || !buyerUser) return;
+  dbg('Buyer requesting contact unlock', {});
+  const { error } = await sbBuyer.rpc('request_contact_unlock', { conv_id: currentConvId });
+  if (error) { alert('Request failed: ' + error.message); return; }
+  dbg('Contact unlock requested', {});
+  loadMessages();
+}
+
+async function approveUnlock() {
+  if (!currentConvId || !ownerUser) return;
+  dbg('Owner approving contact unlock', {});
+  const { error } = await sbOwner.rpc('approve_contact_unlock', { conv_id: currentConvId });
+  if (error) { alert('Approve failed: ' + error.message); return; }
+  dbg('Contact unlock approved', {});
+  loadMessages();
+}
+
+async function revokeUnlock() {
+  if (!currentConvId || !ownerUser) return;
+  if (!confirm('Revoke contact sharing?')) return;
+  const { error } = await sbOwner.rpc('revoke_contact_unlock', { conv_id: currentConvId });
+  if (error) { alert('Revoke failed: ' + error.message); return; }
+  dbg('Contact unlock revoked', {});
+  loadMessages();
+}
+
+// ── POLLING (real-time updates every 3s) ─────────────────────────────────
+function startPolling() {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(loadMessages, 3000);
+  dbg('Polling started', { interval: '3s' });
+}
+</script>
+</body>
+</html>

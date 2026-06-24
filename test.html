@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Edge Functions Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:#e7e4dd;padding:20px;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.hdr{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.wm{font-size:14px;font-weight:700;letter-spacing:4px;color:#1a1a1a}
+.tag{font-size:9px;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden}
+.card-h{padding:12px 16px;border-bottom:1px solid #e6e4df;display:flex;align-items:center;justify-content:space-between}
+.card-h h2{font-size:12px;font-weight:700;color:#1a1a1a}
+.card-b{padding:14px}
+label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:4px;display:block;margin-top:10px}
+label:first-child{margin-top:0}
+input,textarea{width:100%;padding:9px 11px;border-radius:6px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:12px;color:#1a1a1a;outline:none;margin-bottom:4px}
+input:focus,textarea:focus{border-color:#C9A84C}
+textarea{min-height:60px;resize:vertical;font-size:11px}
+.row{display:flex;gap:8px}
+.row>div{flex:1}
+.btn{padding:9px 18px;border-radius:20px;border:none;cursor:pointer;font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.btn-gold{background:#C9A84C;color:#fff}
+.btn-dark{background:#1a1a1a;color:#fff}
+.btn-ghost{background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.pill{display:inline-block;padding:3px 9px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.pill-green{background:#E6F9EE;color:#1E8449}
+.pill-gray{background:#f5f4f1;color:#9a9a9a}
+.pill-red{background:#FDEDEC;color:#C0392B}
+pre{background:#1a1a1a;color:#C9A84C;padding:12px;border-radius:6px;font-size:10px;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;margin-top:10px;line-height:1.6}
+.status{font-size:11px;color:#9a9a9a;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="logo">
+    <svg viewBox="0 0 200 162" height="24"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+    <span class="wm">WALLESTATE</span>
+  </div>
+  <span class="tag">Edge Functions Test</span>
+</div>
+
+<!-- Login -->
+<div class="card">
+  <div class="card-h"><h2>1. Get Auth Token</h2><span id="authStatus" class="pill pill-gray">Not logged in</span></div>
+  <div class="card-b">
+    <div class="row">
+      <div><label>Phone</label><input type="tel" id="phone" value="+201025899960"/></div>
+      <div><label>Password</label><input type="password" id="password"/></div>
+    </div>
+    <button class="btn btn-dark" onclick="login()">Log In & Get Token</button>
+    <div id="tokenDisplay" style="display:none;margin-top:10px">
+      <label>JWT Token (auto-used in all tests below)</label>
+      <textarea id="tokenBox" readonly style="font-size:9px;min-height:44px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Test 1: analyse-development -->
+<div class="card">
+  <div class="card-h"><h2>2. Test analyse-development</h2><span id="devStatus" class="pill pill-gray">Not tested</span></div>
+  <div class="card-b">
+    <label>Search Query</label>
+    <input type="text" id="devQuery" value="Emaar Misr New Cairo 2025"/>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-gold" onclick="testDev()">Run Analysis</button>
+      <button class="btn btn-ghost" onclick="clearResult('devResult','devStatus')">Clear</button>
+    </div>
+    <div id="devStatus2" class="status"></div>
+    <pre id="devResult" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- Test 2: score-match -->
+<div class="card">
+  <div class="card-h"><h2>3. Test score-match</h2><span id="matchStatus" class="pill pill-gray">Not tested</span></div>
+  <div class="card-b">
+    <div class="row">
+      <div>
+        <label>Listing (JSON)</label>
+        <textarea id="matchListing">{
+  "id": "test-123",
+  "title": "3BR Mivida New Cairo",
+  "listing_type": "sale",
+  "property_type": "apartment",
+  "district": "New Cairo",
+  "city": "Cairo",
+  "bedrooms": 3,
+  "bathrooms": 2,
+  "area_sqm": 185,
+  "price": 2850000
+}</textarea>
+      </div>
+      <div>
+        <label>Buyer Preferences (JSON)</label>
+        <textarea id="matchPrefs">{
+  "listing_type": "sale",
+  "min_price": 1500000,
+  "max_price": 3000000,
+  "min_bedrooms": 3,
+  "min_area_sqm": 150,
+  "districts": ["New Cairo", "Maadi"],
+  "property_types": ["apartment"]
+}</textarea>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="testMatch()" style="margin-top:6px">Score Match</button>
+    <div id="matchStatus2" class="status"></div>
+    <pre id="matchResult" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- Test 3: score-contact -->
+<div class="card">
+  <div class="card-h"><h2>4. Test score-contact (Broker Detection)</h2><span id="contactStatus" class="pill pill-gray">Not tested</span></div>
+  <div class="card-b">
+    <label>Message to analyse</label>
+    <input type="text" id="contactMsg" value="Hi, I have many clients interested in this property and can offer a commission arrangement"/>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">
+      <button class="btn btn-ghost" style="font-size:9px;padding:5px 10px" onclick="setMsg('Hello, is this property still available?')">Safe message</button>
+      <button class="btn btn-ghost" style="font-size:9px;padding:5px 10px" onclick="setMsg('I have many clients interested, I work as a real estate agent and can offer 2.5% commission')">Broker message</button>
+      <button class="btn btn-ghost" style="font-size:9px;padding:5px 10px" onclick="setMsg('عندي عملاء مهتمين بالشقة دي وعايز نتفق على عمولة')">Arabic broker</button>
+    </div>
+    <button class="btn btn-gold" onclick="testContact()">Detect Broker Language</button>
+    <div id="contactStatus2" class="status"></div>
+    <pre id="contactResult" style="display:none"></pre>
+  </div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL     = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+const FUNCTIONS_URL    = SUPABASE_URL + '/functions/v1';
+
+let sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let authToken = null;
+
+async function login() {
+  const phone = document.getElementById('phone').value.trim();
+  const password = document.getElementById('password').value;
+  const { data, error } = await sb.auth.signInWithPassword({ phone, password });
+  if (error) { alert('Login failed: ' + error.message); return; }
+  authToken = data.session.access_token;
+  document.getElementById('authStatus').textContent = '● Logged in';
+  document.getElementById('authStatus').className = 'pill pill-green';
+  document.getElementById('tokenDisplay').style.display = 'block';
+  document.getElementById('tokenBox').value = authToken;
+}
+
+async function callFunction(name, body) {
+  if (!authToken) { alert('Log in first to get an auth token.'); return null; }
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const res = await fetch(FUNCTIONS_URL + '/' + name, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const text = await res.text();
+    console.log('Raw response from ' + name + ':', text);
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { data = { raw: text, parse_error: e.message }; }
+    return { status: res.status, data };
+  } catch(e) {
+    console.error('Fetch error:', e);
+    if (e.name === 'AbortError') {
+      return { status: 408, data: { error: 'Request timed out after 30 seconds. Check Supabase Edge Function logs for details.' } };
+    }
+    return { status: 0, data: { error: e.message } };
+  }
+}
+
+function showResult(preId, statusId, statusId2, result, duration) {
+  const pre = document.getElementById(preId);
+  const pill = document.getElementById(statusId);
+  const stat = document.getElementById(statusId2);
+  pre.style.display = 'block';
+  pre.textContent = JSON.stringify(result.data, null, 2);
+  const ok = result.status === 200;
+  pill.textContent = ok ? '✓ ' + result.status + ' OK' : '✗ ' + result.status + ' Error';
+  pill.className = 'pill ' + (ok ? 'pill-green' : 'pill-red');
+  stat.textContent = 'Completed in ' + duration + 'ms' + (result.data.cached ? ' (cached)' : '') + (result.data.model_used ? ' · model: ' + result.data.model_used : '');
+}
+
+function clearResult(preId, statusId) {
+  document.getElementById(preId).style.display = 'none';
+  document.getElementById(statusId).textContent = 'Not tested';
+  document.getElementById(statusId).className = 'pill pill-gray';
+}
+
+function setMsg(msg) { document.getElementById('contactMsg').value = msg; }
+
+async function testDev() {
+  const query = document.getElementById('devQuery').value.trim();
+  if (!query) { alert('Enter a query'); return; }
+  document.getElementById('devStatus').textContent = '⏳ Running...';
+  document.getElementById('devStatus').className = 'pill pill-gray';
+  document.getElementById('devStatus2').textContent = 'Calling analyse-development... (may take 10-20 seconds)';
+  const t = Date.now();
+  const result = await callFunction('analyse-development', { query });
+  if (result) showResult('devResult', 'devStatus', 'devStatus2', result, Date.now()-t);
+}
+
+async function testMatch() {
+  let listing, prefs;
+  try { listing = JSON.parse(document.getElementById('matchListing').value); }
+  catch(e) { alert('Invalid listing JSON'); return; }
+  try { prefs = JSON.parse(document.getElementById('matchPrefs').value); }
+  catch(e) { alert('Invalid preferences JSON'); return; }
+  document.getElementById('matchStatus').textContent = '⏳ Running...';
+  document.getElementById('matchStatus2').textContent = 'Calling score-match...';
+  const t = Date.now();
+  const result = await callFunction('score-match', { listing, preferences: prefs });
+  if (result) showResult('matchResult', 'matchStatus', 'matchStatus2', result, Date.now()-t);
+}
+
+async function testContact() {
+  const message = document.getElementById('contactMsg').value.trim();
+  if (!message) { alert('Enter a message'); return; }
+  document.getElementById('contactStatus').textContent = '⏳ Running...';
+  document.getElementById('contactStatus2').textContent = 'Calling score-contact...';
+  const t = Date.now();
+  const result = await callFunction('score-contact', { message });
+  if (result) showResult('contactResult', 'contactStatus', 'contactStatus2', result, Date.now()-t);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Listing CRUD Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:#e7e4dd;min-height:100vh;padding:24px}
+.wrap{max-width:880px;margin:0 auto}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.logo{display:flex;align-items:center;gap:10px}
+.wm{font-size:15px;font-weight:700;letter-spacing:4px;color:#1a1a1a}
+.dot{width:4px;height:4px;border-radius:50%;background:#C9A84C}
+.tag{font-size:9px;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden;margin-bottom:16px}
+.card-h{padding:14px 18px;border-bottom:1px solid #e6e4df;display:flex;align-items:center;justify-content:space-between}
+.card-h h2{font-size:13px;font-weight:700;color:#1a1a1a}
+.card-b{padding:18px}
+.config{padding:12px 16px;background:#fffbeb;border-bottom:1px solid #f0d080;font-size:11px;color:#8B6914;line-height:1.6}
+.config code{background:#fff;padding:1px 5px;border-radius:3px;font-size:10px}
+#debugPanel{background:#1a1a1a;color:#C9A84C;font-family:monospace;font-size:10px;padding:10px 14px;max-height:160px;overflow-y:auto;line-height:1.6;display:none;border-radius:8px;margin-bottom:16px}
+.row{display:flex;gap:10px;margin-bottom:12px}
+.row>div{flex:1}
+.field{margin-bottom:12px}
+label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:5px;display:block}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#C9A84C}
+textarea{resize:vertical;min-height:70px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 12px;border-radius:16px;font-size:10.5px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:1px solid #e6e4df;background:#fff;color:#4a4a4a;user-select:none}
+.chip.sel{background:#1a1a1a;color:#fff;border-color:transparent}
+.btn{padding:11px 18px;border-radius:22px;background:#C9A84C;color:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;border:none;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-dark{background:#1a1a1a}
+.btn-ghost{background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df}
+.btn-sm{padding:6px 12px;font-size:9.5px;border-radius:16px}
+.btn-red{background:#fff;color:#C0392B;border:1.5px solid #f0c0ba}
+.msg{padding:10px 12px;border-radius:6px;font-size:12px;margin-bottom:12px;display:none}
+.msg.show{display:block}
+.msg-err{background:#FDEDEC;color:#C0392B;border:1px solid #f0c0ba}
+.msg-ok{background:#E6F9EE;color:#1E8449;border:1px solid #b8e6c8}
+.photo-drop{padding:24px;border-radius:8px;border:2px dashed #e6e4df;text-align:center;cursor:pointer;color:#9a9a9a;font-size:12px;margin-bottom:10px}
+.photo-drop:hover{border-color:#C9A84C}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:12px}
+.photo-thumb{position:relative;border-radius:6px;overflow:hidden;aspect-ratio:1;background:#f5f4f1;border:1px solid #e6e4df}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-thumb .rm{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+.photo-thumb .primary-badge{position:absolute;bottom:3px;left:3px;padding:2px 6px;border-radius:3px;background:#C9A84C;color:#fff;font-size:8px;font-weight:700}
+/* Listing list */
+.lst{display:flex;gap:12px;padding:14px 18px;border-bottom:1px solid #f0efec;align-items:center}
+.lst:last-child{border-bottom:none}
+.lst-thumb{width:56px;height:56px;border-radius:6px;background:#f5f4f1;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.lst-thumb img{width:100%;height:100%;object-fit:cover}
+.lst-info{flex:1;min-width:0}
+.lst-title{font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lst-sub{font-size:11px;color:#9a9a9a;margin-top:2px}
+.lst-price{font-size:13px;font-weight:700;color:#C9A84C;margin-top:2px}
+.status-pill{padding:3px 9px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
+.st-draft{background:#f5f4f1;color:#9a9a9a}
+.st-active{background:#E6F9EE;color:#1E8449}
+.st-pending_review{background:#F5E9C8;color:#8B6914}
+.st-paused{background:#FEF5E7;color:#E67E22}
+.st-sold,.st-rented{background:#e6e4df;color:#4a4a4a}
+.empty{padding:50px 24px;text-align:center;color:#9a9a9a;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="logo">
+      <svg viewBox="0 0 200 162" height="26"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+      <span class="wm">WALLESTATE<span class="dot"></span></span>
+    </div>
+    <span class="tag">Listing CRUD Demo</span>
+  </div>
+
+  <div class="config" id="configBanner">
+    ⚙️ <strong>Setup needed:</strong> Replace <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, and <code>TEST_USER_ID</code> at the top of this file's script.
+  </div>
+
+  <div id="debugPanel"></div>
+
+  <!-- Session card -->
+  <div class="card">
+    <div class="card-h"><h2>Test Session</h2><span id="sessionStatus" style="font-size:11px;color:#9a9a9a"></span></div>
+    <div class="card-b">
+      <div class="row">
+        <div>
+          <label>Phone</label>
+          <input type="tel" id="loginPhone" placeholder="+201025899960"/>
+        </div>
+        <div>
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••"/>
+        </div>
+      </div>
+      <button class="btn btn-dark" onclick="handleTestLogin()">Log In as Test Owner</button>
+      <div class="msg msg-err" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- Create / Edit listing form -->
+  <div class="card">
+    <div class="card-h"><h2 id="formTitle">Create New Listing</h2><span id="formMode" style="font-size:10px;color:#C9A84C;font-weight:700"></span></div>
+    <div class="card-b">
+      <div class="msg msg-err" id="formErr"></div>
+      <div class="msg msg-ok" id="formOk"></div>
+
+      <div class="field">
+        <label>Listing Title</label>
+        <input type="text" id="f_title" placeholder="Bright 3BR Apartment in Mivida"/>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Listing Type</label>
+          <select id="f_listing_type">
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
+          </select>
+        </div>
+        <div>
+          <label>Property Type</label>
+          <select id="f_property_type">
+            <option value="apartment">Apartment</option>
+            <option value="villa">Villa</option>
+            <option value="townhouse">Townhouse</option>
+            <option value="penthouse">Penthouse</option>
+            <option value="studio">Studio</option>
+            <option value="duplex">Duplex</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>City</label>
+          <input type="text" id="f_city" value="Cairo"/>
+        </div>
+        <div>
+          <label>District</label>
+          <input type="text" id="f_district" placeholder="New Cairo"/>
+        </div>
+        <div>
+          <label>Compound (optional)</label>
+          <input type="text" id="f_compound" placeholder="Mivida"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Address</label>
+        <input type="text" id="f_address" placeholder="Street, building, apartment number"/>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Bedrooms</label>
+          <input type="number" id="f_bedrooms" min="0" max="20" value="3"/>
+        </div>
+        <div>
+          <label>Bathrooms</label>
+          <input type="number" id="f_bathrooms" min="0" max="20" value="2"/>
+        </div>
+        <div>
+          <label>Area (sqm)</label>
+          <input type="number" id="f_area" min="0" value="185"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Floor</label>
+          <input type="number" id="f_floor" min="0"/>
+        </div>
+        <div>
+          <label>Total Floors in Building</label>
+          <input type="number" id="f_total_floors" min="0"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Price (EGP)</label>
+          <input type="number" id="f_price" min="0" placeholder="2850000"/>
+        </div>
+        <div>
+          <label>Service Charge / yr (optional)</label>
+          <input type="number" id="f_service_charge" min="0"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Description</label>
+        <textarea id="f_description" placeholder="Bright 3BR apartment, new kitchen, hardwood floors, garden view..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Amenities</label>
+        <div class="chip-row" id="amenityChips">
+          <div class="chip" data-amenity="parking">Parking</div>
+          <div class="chip" data-amenity="pool">Pool</div>
+          <div class="chip" data-amenity="gym">Gym</div>
+          <div class="chip" data-amenity="security">Security</div>
+          <div class="chip" data-amenity="elevator">Elevator</div>
+          <div class="chip" data-amenity="garden">Garden</div>
+          <div class="chip" data-amenity="balcony">Balcony</div>
+          <div class="chip" data-amenity="storage">Storage</div>
+          <div class="chip" data-amenity="maid_room">Maid Room</div>
+          <div class="chip" data-amenity="central_ac">Central A/C</div>
+          <div class="chip" data-amenity="pets_allowed">Pets Allowed</div>
+          <div class="chip" data-amenity="sea_view">Sea View</div>
+          <div class="chip" data-amenity="city_view">City View</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Photos</label>
+        <div class="photo-drop" onclick="document.getElementById('photoInput').click()">
+          📷 Click to upload photos (first photo becomes primary)
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(event)"/>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="saveBtn" onclick="handleSaveListing('draft')">Save as Draft</button>
+        <button class="btn btn-dark" id="publishBtn" onclick="handleSaveListing('pending_review')">Publish Listing</button>
+        <button class="btn btn-ghost" id="cancelEditBtn" style="display:none" onclick="resetForm()">Cancel Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- My listings -->
+  <div class="card">
+    <div class="card-h"><h2>My Listings</h2><button class="btn btn-sm btn-ghost" onclick="loadMyListings()">Refresh</button></div>
+    <div id="listingsContainer"><div class="empty">Log in above to see your listings.</div></div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+
+let sb = null;
+let currentUser = null;
+let editingListingId = null;   // null = creating new, else editing existing
+let pendingPhotos = [];        // { file, previewUrl } before upload
+let existingPhotos = [];       // photos already saved for the listing being edited
+let selectedAmenities = new Set();
+
+if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  document.getElementById('configBanner').style.display = 'none';
+}
+
+const debugPanel = document.getElementById('debugPanel');
+debugPanel.style.display = 'block';
+function dbg(label, data) {
+  const line = document.createElement('div');
+  const ts = new Date().toLocaleTimeString();
+  let dataStr = '';
+  try { dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data); }
+  catch(e) { dataStr = '[unserializable]'; }
+  line.textContent = '[' + ts + '] ' + label + (dataStr ? ': ' + dataStr : '');
+  debugPanel.appendChild(line);
+  debugPanel.scrollTop = debugPanel.scrollHeight;
+  console.log(label, data);
+}
+dbg('Client initialized', { hasClient: !!sb });
+
+function showMsg(elId, text, isErr) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.classList.add('show');
+}
+function hideMsg(elId) {
+  document.getElementById(elId).classList.remove('show');
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+async function handleTestLogin() {
+  hideMsg('loginErr');
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!sb) { showMsg('loginErr', 'Supabase client not configured.'); return; }
+  if (!phone || !password) { showMsg('loginErr', 'Enter phone and password.'); return; }
+
+  dbg('Logging in', { phone });
+  const { data, error } = await sb.auth.signInWithPassword({ phone, password });
+  dbg('Login response', { hasUser: !!data?.user, error: error?.message });
+
+  if (error) { showMsg('loginErr', error.message); return; }
+
+  currentUser = data.user;
+  document.getElementById('sessionStatus').textContent = '● Logged in as ' + currentUser.phone;
+  document.getElementById('sessionStatus').style.color = '#1E8449';
+  loadMyListings();
+}
+
+// ── AMENITY CHIPS ────────────────────────────────────────────────────────
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const a = chip.dataset.amenity;
+    if (selectedAmenities.has(a)) {
+      selectedAmenities.delete(a);
+      chip.classList.remove('sel');
+    } else {
+      selectedAmenities.add(a);
+      chip.classList.add('sel');
+    }
+  });
+});
+
+// ── PHOTO SELECTION (staged locally before upload) ───────────────────────
+function handlePhotoSelect(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const previewUrl = URL.createObjectURL(file);
+    pendingPhotos.push({ file, previewUrl });
+  });
+  renderPhotoGrid();
+  event.target.value = '';
+}
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+
+  existingPhotos.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.innerHTML = '<img src="' + p.url + '"/>'
+      + (i === 0 ? '<div class="primary-badge">Primary</div>' : '')
+      + '<div class="rm" onclick="removeExistingPhoto(\'' + p.id + '\')">✕</div>';
+    grid.appendChild(div);
+  });
+
+  pendingPhotos.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.innerHTML = '<img src="' + p.previewUrl + '"/>'
+      + (existingPhotos.length === 0 && i === 0 ? '<div class="primary-badge">Primary</div>' : '')
+      + '<div class="rm" onclick="removePendingPhoto(' + i + ')">✕</div>';
+    grid.appendChild(div);
+  });
+}
+
+function removePendingPhoto(i) {
+  pendingPhotos.splice(i, 1);
+  renderPhotoGrid();
+}
+
+async function removeExistingPhoto(photoId) {
+  dbg('Deleting photo', { photoId });
+  const photo = existingPhotos.find(p => p.id === photoId);
+  if (photo) {
+    await sb.storage.from('listing-photos').remove([photo.storage_path]);
+  }
+  await sb.from('listing_photos').delete().eq('id', photoId);
+  existingPhotos = existingPhotos.filter(p => p.id !== photoId);
+  renderPhotoGrid();
+}
+
+// ── SAVE LISTING (create or update) ───────────────────────────────────────
+async function handleSaveListing(targetStatus) {
+  hideMsg('formErr'); hideMsg('formOk');
+
+  if (!currentUser) { showMsg('formErr', 'Please log in first.'); return; }
+
+  const title = document.getElementById('f_title').value.trim();
+  const district = document.getElementById('f_district').value.trim();
+  const price = parseInt(document.getElementById('f_price').value);
+
+  if (!title || !district || !price) {
+    showMsg('formErr', 'Title, district, and price are required.');
+    return;
+  }
+
+  const listingData = {
+    owner_id: currentUser.id,
+    title: title,
+    description: document.getElementById('f_description').value.trim() || null,
+    property_type: document.getElementById('f_property_type').value,
+    listing_type: document.getElementById('f_listing_type').value,
+    city: document.getElementById('f_city').value.trim() || 'Cairo',
+    district: district,
+    compound: document.getElementById('f_compound').value.trim() || null,
+    address: document.getElementById('f_address').value.trim() || null,
+    bedrooms: parseInt(document.getElementById('f_bedrooms').value) || null,
+    bathrooms: parseInt(document.getElementById('f_bathrooms').value) || null,
+    area_sqm: parseFloat(document.getElementById('f_area').value) || null,
+    floor: parseInt(document.getElementById('f_floor').value) || null,
+    total_floors: parseInt(document.getElementById('f_total_floors').value) || null,
+    price: price,
+    service_charge: parseInt(document.getElementById('f_service_charge').value) || null,
+    status: targetStatus,
+  };
+
+  if (targetStatus === 'pending_review') {
+    listingData.published_at = new Date().toISOString();
+  }
+
+  dbg('Saving listing', { editingListingId, status: targetStatus });
+
+  let listingId = editingListingId;
+  let saveError = null;
+
+  if (editingListingId) {
+    const { error } = await sb.from('listings').update(listingData).eq('id', editingListingId);
+    saveError = error;
+  } else {
+    const { data, error } = await sb.from('listings').insert(listingData).select().single();
+    saveError = error;
+    if (data) listingId = data.id;
+  }
+
+  dbg('Listing save result', { listingId, error: saveError?.message, code: saveError?.code });
+
+  if (saveError) {
+    showMsg('formErr', saveError.message);
+    return;
+  }
+
+  // Upload pending photos
+  if (pendingPhotos.length > 0) {
+    dbg('Uploading photos', { count: pendingPhotos.length });
+    for (let i = 0; i < pendingPhotos.length; i++) {
+      const { file } = pendingPhotos[i];
+      const ext = file.name.split('.').pop();
+      const path = listingId + '/' + Date.now() + '_' + i + '.' + ext;
+
+      const { error: uploadErr } = await sb.storage.from('listing-photos').upload(path, file);
+      if (uploadErr) {
+        dbg('Photo upload error', { error: uploadErr.message });
+        continue;
+      }
+
+      const { data: urlData } = sb.storage.from('listing-photos').getPublicUrl(path);
+
+      await sb.from('listing_photos').insert({
+        listing_id: listingId,
+        storage_path: path,
+        url: urlData.publicUrl,
+        is_primary: existingPhotos.length === 0 && i === 0,
+        sort_order: existingPhotos.length + i,
+      });
+    }
+    pendingPhotos = [];
+  }
+
+  // Save amenities
+  await sb.from('listing_amenities').delete().eq('listing_id', listingId);
+  if (selectedAmenities.size > 0) {
+    const amenityRows = Array.from(selectedAmenities).map(a => ({ listing_id: listingId, amenity: a }));
+    await sb.from('listing_amenities').insert(amenityRows);
+  }
+
+  showMsg('formOk', targetStatus === 'draft' ? 'Saved as draft.' : 'Submitted for review — will go live once approved.');
+  resetForm();
+  loadMyListings();
+}
+
+// ── LOAD MY LISTINGS ─────────────────────────────────────────────────────
+async function loadMyListings() {
+  const container = document.getElementById('listingsContainer');
+  if (!currentUser) {
+    container.innerHTML = '<div class="empty">Log in above to see your listings.</div>';
+    return;
+  }
+
+  dbg('Loading listings', { ownerId: currentUser.id });
+  const { data: listings, error } = await sb
+    .from('listings')
+    .select('*, listing_photos(*)')
+    .eq('owner_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  dbg('Listings loaded', { count: listings?.length, error: error?.message });
+
+  if (error) {
+    container.innerHTML = '<div class="empty">Error loading listings: ' + error.message + '</div>';
+    return;
+  }
+
+  if (!listings || listings.length === 0) {
+    container.innerHTML = '<div class="empty">No listings yet. Create your first one above.</div>';
+    return;
+  }
+
+  let html = '';
+  listings.forEach(l => {
+    const primaryPhoto = (l.listing_photos || []).find(p => p.is_primary) || (l.listing_photos || [])[0];
+    const thumbContent = primaryPhoto ? '<img src="'+primaryPhoto.url+'"/>' : '🏠';
+    const priceFmt = 'EGP ' + Number(l.price).toLocaleString();
+    const statusClass = 'st-' + l.status;
+
+    html += '<div class="lst">'
+      + '<div class="lst-thumb">' + thumbContent + '</div>'
+      + '<div class="lst-info">'
+      + '<div class="lst-title">' + l.title + '</div>'
+      + '<div class="lst-sub">' + l.district + ' · ' + l.bedrooms + ' bed · ' + l.area_sqm + ' sqm</div>'
+      + '<div class="lst-price">' + priceFmt + '</div>'
+      + '</div>'
+      + '<span class="status-pill ' + statusClass + '">' + l.status.replace('_',' ') + '</span>'
+      + '<button class="btn btn-sm btn-ghost" onclick="editListing(\'' + l.id + '\')">Edit</button>'
+      + '<button class="btn btn-sm btn-red" onclick="deleteListing(\'' + l.id + '\')">Delete</button>'
+      + '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── EDIT LISTING ─────────────────────────────────────────────────────────
+async function editListing(listingId) {
+  dbg('Loading listing for edit', { listingId });
+  const { data: listing, error } = await sb
+    .from('listings')
+    .select('*, listing_photos(*), listing_amenities(*)')
+    .eq('id', listingId)
+    .single();
+
+  if (error) { alert('Could not load listing: ' + error.message); return; }
+
+  editingListingId = listingId;
+  document.getElementById('formTitle').textContent = 'Edit Listing';
+  document.getElementById('formMode').textContent = 'EDITING';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+  document.getElementById('f_title').value = listing.title || '';
+  document.getElementById('f_listing_type').value = listing.listing_type;
+  document.getElementById('f_property_type').value = listing.property_type;
+  document.getElementById('f_city').value = listing.city || 'Cairo';
+  document.getElementById('f_district').value = listing.district || '';
+  document.getElementById('f_compound').value = listing.compound || '';
+  document.getElementById('f_address').value = listing.address || '';
+  document.getElementById('f_bedrooms').value = listing.bedrooms || '';
+  document.getElementById('f_bathrooms').value = listing.bathrooms || '';
+  document.getElementById('f_area').value = listing.area_sqm || '';
+  document.getElementById('f_floor').value = listing.floor || '';
+  document.getElementById('f_total_floors').value = listing.total_floors || '';
+  document.getElementById('f_price').value = listing.price || '';
+  document.getElementById('f_service_charge').value = listing.service_charge || '';
+  document.getElementById('f_description').value = listing.description || '';
+
+  selectedAmenities = new Set((listing.listing_amenities || []).map(a => a.amenity));
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.classList.toggle('sel', selectedAmenities.has(chip.dataset.amenity));
+  });
+
+  existingPhotos = listing.listing_photos || [];
+  pendingPhotos = [];
+  renderPhotoGrid();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  editingListingId = null;
+  document.getElementById('formTitle').textContent = 'Create New Listing';
+  document.getElementById('formMode').textContent = '';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+
+  ['f_title','f_compound','f_address','f_floor','f_total_floors','f_service_charge','f_description'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f_district').value = '';
+  document.getElementById('f_city').value = 'Cairo';
+  document.getElementById('f_bedrooms').value = 3;
+  document.getElementById('f_bathrooms').value = 2;
+  document.getElementById('f_area').value = 185;
+  document.getElementById('f_price').value = '';
+  document.getElementById('f_listing_type').value = 'sale';
+  document.getElementById('f_property_type').value = 'apartment';
+
+  selectedAmenities = new Set();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+
+  pendingPhotos = [];
+  existingPhotos = [];
+  renderPhotoGrid();
+
+  hideMsg('formErr'); hideMsg('formOk');
+}
+
+// ── DELETE LISTING ───────────────────────────────────────────────────────
+async function deleteListing(listingId) {
+  if (!confirm('Delete this listing permanently? This cannot be undone.')) return;
+
+  dbg('Deleting listing', { listingId });
+
+  // Delete photos from storage first
+  const { data: photos } = await sb.from('listing_photos').select('storage_path').eq('listing_id', listingId);
+  if (photos && photos.length > 0) {
+    await sb.storage.from('listing-photos').remove(photos.map(p => p.storage_path));
+  }
+
+  const { error } = await sb.from('listings').delete().eq('id', listingId);
+  dbg('Delete result', { error: error?.message });
+
+  if (error) { alert('Could not delete: ' + error.message); return; }
+
+  loadMyListings();
+}
+</script>
+</body>
+</html>
