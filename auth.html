@@ -348,25 +348,13 @@ async function attemptAction(action) {
       return;
     }
 
-    if (action === 'contact') {
-      if (profile.phone_verified) {
-        document.getElementById('successTitle').textContent = 'Ready to message';
-        document.getElementById('successSub').textContent = 'Your phone is verified — go ahead and contact the owner.';
-        showScreen('success');
-        return;
-      }
-      dbg('Sending OTP for contact action', {});
-      await sendOtp();
-      document.getElementById('otpContext').textContent = 'Verify your phone to contact this owner';
-      showScreen('otp');
-      return;
-    }
-
     if (action === 'list') {
       if (profile.phone_verified && profile.verified) {
+        dbg('User fully verified — redirecting to listings', {});
         document.getElementById('successTitle').textContent = 'Ready to list';
         document.getElementById('successSub').textContent = 'You are fully verified — go ahead and create your listing.';
-        showScreen('success');
+        // Skip success screen entirely — go straight to listings page
+        window.location.href = 'listings.html';
         return;
       }
       if (!profile.phone_verified) {
@@ -378,6 +366,19 @@ async function attemptAction(action) {
       }
       // Phone verified but identity not — go straight to identity step
       showScreen('identity');
+      return;
+    }
+
+    if (action === 'contact') {
+      if (profile.phone_verified) {
+        dbg('User phone verified — redirecting to messaging', {});
+        window.location.href = 'messaging.html';
+        return;
+      }
+      dbg('Sending OTP for contact action', {});
+      await sendOtp();
+      document.getElementById('otpContext').textContent = 'Verify your phone to contact this owner';
+      showScreen('otp');
       return;
     }
   } catch (e) {
