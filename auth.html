@@ -95,11 +95,14 @@ input:focus{border-color:#C9A84C}
     <div id="screen-browse" style="display:none">
       <div class="msg msg-ok show">✓ Logged in — you can browse freely</div>
       <div style="font-size:12px;color:#4a4a4a;line-height:1.7;margin-bottom:16px">
-        Welcome! You can search and view listings right away.<br><br>
-        Verification is only required when you:
+        Welcome! Browse listings freely.<br><br>
+        Verification is only needed when you:
       </div>
-      <button class="btn" onclick="attemptAction('list')">Try: Create a Listing</button>
-      <button class="btn" style="margin-top:8px;background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df" onclick="attemptAction('contact')">Try: Contact an Owner</button>
+      <button class="btn" onclick="attemptAction('list')">🏠 Create a Listing (Owner)</button>
+      <button class="btn" style="margin-top:8px;background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df" onclick="attemptAction('contact')">💬 Contact an Owner (Buyer)</button>
+      <div style="margin-top:16px;padding:12px;background:#f5f4f1;border-radius:6px;font-size:11px;color:#6b6b6b;line-height:1.6">
+        ✓ Verified users are redirected directly to the listing or messaging page after clicking above.
+      </div>
       <div class="foot" onclick="handleLogout()" style="margin-top:20px;color:#C0392B">Log out</div>
     </div>
 
@@ -143,9 +146,10 @@ input:focus{border-color:#C9A84C}
       <div style="text-align:center;padding:20px 0">
         <div style="font-size:40px;margin-bottom:10px">✓</div>
         <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:6px" id="successTitle">Verified!</div>
-        <div style="font-size:12px;color:#9a9a9a;line-height:1.6" id="successSub">You can now continue.</div>
+        <div style="font-size:12px;color:#9a9a9a;line-height:1.6;margin-bottom:18px" id="successSub">You can now continue.</div>
       </div>
-      <button class="btn" onclick="showScreen('browse')">Continue</button>
+      <button class="btn" id="successActionBtn" onclick="showScreen('browse')">Continue</button>
+      <div class="foot" onclick="showScreen('browse')" style="margin-top:12px">Back to browse</div>
     </div>
 
   </div>
@@ -193,6 +197,23 @@ function showScreen(name) {
     otp:'Verify Phone', identity:'Verify Identity', success:'Verified'
   };
   document.getElementById('screenLabel').textContent = labels[name] || '';
+
+  // When showing success, update the action button based on what triggered it
+  if (name === 'success') {
+    const btn = document.getElementById('successActionBtn');
+    if (btn) {
+      if (pendingAction === 'list') {
+        btn.textContent = 'Go to Create Listing →';
+        btn.onclick = function() { window.location.href = 'listings.html'; };
+      } else if (pendingAction === 'contact') {
+        btn.textContent = 'Go to Messaging →';
+        btn.onclick = function() { window.location.href = 'messaging.html'; };
+      } else {
+        btn.textContent = 'Continue';
+        btn.onclick = function() { showScreen('browse'); };
+      }
+    }
+  }
 }
 
 function showErr(elId, msg) {
