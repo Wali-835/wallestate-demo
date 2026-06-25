@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallEstate — Browse Properties in Cairo & Giza</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:#f5f4f1;color:#1a1a1a;min-height:100vh}
+
+/* Nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:1px solid #e6e4df;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-wordmark{font-size:13px;font-weight:700;letter-spacing:5px;color:#1a1a1a}
+.nav-links{display:flex;align-items:center;gap:16px}
+.nav-link{font-size:11px;font-weight:600;color:#6b6b6b;text-decoration:none}
+.nav-link:hover{color:#1a1a1a}
+.nav-btn{padding:8px 18px;border-radius:18px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;font-family:'Manrope',sans-serif}
+.btn-dark{background:#1a1a1a;color:#fff}
+.btn-gold{background:#C9A84C;color:#fff}
+.btn-ghost{background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df}
+
+/* Verified banner */
+.banner{background:#F5E9C8;border-bottom:1px solid #e8d9a0;padding:10px 28px;text-align:center;font-size:11px;font-weight:700;color:#8B6914;letter-spacing:.5px}
+
+/* Search hero */
+.search-hero{background:#fff;padding:28px 28px 20px;border-bottom:1px solid #e6e4df}
+.search-hero h1{font-size:22px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;margin-bottom:16px}
+.search-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-input-wrap{flex:1;min-width:200px;position:relative}
+.search-input{width:100%;padding:11px 14px 11px 38px;border-radius:8px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+.search-input:focus{border-color:#C9A84C}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9a9a9a;font-size:14px}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.chip{padding:7px 14px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #e6e4df;background:#fff;color:#6b6b6b;letter-spacing:.3px;white-space:nowrap;user-select:none}
+.chip.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.chip.gold{background:#C9A84C;color:#fff;border-color:#C9A84C}
+.filter-sep{width:1px;height:20px;background:#e6e4df;margin:0 4px}
+
+/* Layout */
+.layout{max-width:1200px;margin:0 auto;padding:20px 24px}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.results-count{font-size:12px;font-weight:600;color:#6b6b6b}
+.sort-select{padding:7px 12px;border-radius:6px;border:1.5px solid #e6e4df;background:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:#1a1a1a;cursor:pointer;outline:none}
+
+/* Grid */
+.listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.listing-card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.listing-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px -10px rgba(0,0,0,.15)}
+.card-img{position:relative;height:196px;background:#e6e4df;overflow:hidden}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.card-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;background:#f5f4f1}
+.card-type-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.badge-sale{background:#1a1a1a;color:#fff}
+.badge-rent{background:#C9A84C;color:#fff}
+.card-save{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;border:none}
+.owner-badge{position:absolute;bottom:10px;left:10px;padding:3px 8px;border-radius:3px;background:rgba(201,168,76,.92);color:#fff;font-size:9px;font-weight:700;letter-spacing:.5px}
+.card-body{padding:14px}
+.card-price{font-size:18px;font-weight:800;color:#1a1a1a;letter-spacing:-.5px;margin-bottom:4px}
+.card-price span{font-size:11px;font-weight:600;color:#9a9a9a}
+.card-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-location{font-size:11px;color:#9a9a9a;margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.card-specs{display:flex;gap:12px;padding-top:10px;border-top:1px solid #f0efec}
+.spec{font-size:11px;color:#6b6b6b;display:flex;align-items:center;gap:3px;font-weight:600}
+.card-footer{padding:10px 14px;border-top:1px solid #f0efec;display:flex;gap:8px}
+.contact-btn{flex:1;padding:9px;border-radius:8px;background:#C9A84C;color:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;border:none;cursor:pointer;text-align:center}
+.view-btn{padding:9px 14px;border-radius:8px;background:#f5f4f1;color:#1a1a1a;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;border:none;cursor:pointer}
+
+/* Empty / Loading */
+.empty{text-align:center;padding:60px 20px;color:#9a9a9a}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:700;color:#4a4a4a;margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.6}
+.loading{text-align:center;padding:60px;color:#9a9a9a;font-size:13px}
+.skeleton{background:linear-gradient(90deg,#f0efec 25%,#e6e4df 50%,#f0efec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden}
+.skel-img{height:196px}.skel-body{padding:14px}
+.skel-line{border-radius:4px;margin-bottom:8px}
+
+/* Modal / Sign up prompt */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:32px 28px;max-width:360px;width:100%;text-align:center}
+.modal-icon{font-size:40px;margin-bottom:12px}
+.modal-title{font-size:18px;font-weight:800;color:#1a1a1a;margin-bottom:8px;letter-spacing:-.3px}
+.modal-sub{font-size:13px;color:#6b6b6b;line-height:1.6;margin-bottom:22px}
+.modal-btns{display:flex;flex-direction:column;gap:8px}
+.modal-btn{padding:12px;border-radius:22px;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;display:block;text-align:center}
+.modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:#9a9a9a}
+.modal-wrap{position:relative}
+
+@media(max-width:600px){
+  nav{padding:12px 16px}
+  .search-hero{padding:18px 16px 14px}
+  .layout{padding:14px 16px}
+  .listings-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <svg viewBox="0 0 200 162" height="26"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+    <span class="nav-wordmark">WALLESTATE</span>
+  </a>
+  <div class="nav-links">
+    <a href="browse.html" class="nav-link">Browse</a>
+    <a href="auth.html" class="nav-link">Sign In</a>
+    <a href="auth.html" class="nav-btn btn-gold">List Property</a>
+  </div>
+</nav>
+
+<div class="banner">✦ Verified Owner Platform — Direct contact. No brokers. No commissions.</div>
+
+<!-- Search hero -->
+<div class="search-hero">
+  <h1>Properties in Cairo & Giza</h1>
+  <div class="search-row">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" placeholder="Search district, compound, or address..." oninput="filterListings()"/>
+    </div>
+    <button class="nav-btn btn-dark" onclick="filterListings()">Search</button>
+  </div>
+  <div class="filter-row">
+    <div class="chip active" data-filter="all" onclick="setTypeFilter('all',this)">All</div>
+    <div class="chip" data-filter="sale" onclick="setTypeFilter('sale',this)">For Sale</div>
+    <div class="chip" data-filter="rent" onclick="setTypeFilter('rent',this)">For Rent</div>
+    <div class="filter-sep"></div>
+    <div class="chip gold" id="ownerOnlyChip" onclick="toggleOwnerOnly(this)">✦ Owner Direct</div>
+    <div class="filter-sep"></div>
+    <div class="chip" data-beds="1" onclick="setBedsFilter('1',this)">1+ bed</div>
+    <div class="chip" data-beds="2" onclick="setBedsFilter('2',this)">2+ beds</div>
+    <div class="chip" data-beds="3" onclick="setBedsFilter('3',this)">3+ beds</div>
+    <div class="chip" data-beds="4" onclick="setBedsFilter('4',this)">4+ beds</div>
+  </div>
+</div>
+
+<!-- Listings -->
+<div class="layout">
+  <div class="results-header">
+    <div class="results-count" id="resultsCount">Loading properties...</div>
+    <select class="sort-select" id="sortSelect" onchange="renderListings()">
+      <option value="newest">Newest first</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+      <option value="area_desc">Largest first</option>
+    </select>
+  </div>
+  <div id="listingsGrid" class="listings-grid"></div>
+</div>
+
+<!-- Sign up prompt overlay -->
+<div class="overlay" id="signupOverlay" onclick="closeOverlay(event)">
+  <div class="modal modal-wrap">
+    <button class="modal-close" onclick="closeOverlay()">✕</button>
+    <div class="modal-icon">🔒</div>
+    <div class="modal-title">Contact this owner</div>
+    <div class="modal-sub">Create a free account to message property owners directly — no brokers, no commission, no middleman.</div>
+    <div class="modal-btns">
+      <a href="auth.html" class="modal-btn btn-gold">Create Free Account</a>
+      <a href="auth.html" class="modal-btn" style="background:#f5f4f1;color:#1a1a1a">Sign In</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL      = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allListings  = [];
+let typeFilter   = 'all';
+let bedsFilter   = null;
+let ownerOnly    = false;
+let searchQuery  = '';
+
+// ── LOAD LISTINGS ─────────────────────────────────────────────────────────
+async function loadListings() {
+  showSkeletons();
+
+  const { data, error } = await sb
+    .from('listings')
+    .select('*, listing_photos(*), listing_amenities(*)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    document.getElementById('listingsGrid').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load listings</div><div class="empty-sub">' + error.message + '</div></div>';
+    return;
+  }
+
+  allListings = data || [];
+  filterListings();
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function filterListings() {
+  searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  let filtered = allListings.filter(function(l) {
+    if (typeFilter !== 'all' && l.listing_type !== typeFilter) return false;
+    if (bedsFilter && (l.bedrooms || 0) < parseInt(bedsFilter)) return false;
+    if (searchQuery) {
+      const haystack = [l.title, l.district, l.compound, l.address, l.city]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!haystack.includes(searchQuery)) return false;
+    }
+    return true;
+  });
+
+  renderListings(filtered);
+}
+
+// ── SORT & RENDER ─────────────────────────────────────────────────────────
+function renderListings(listings) {
+  const sort = document.getElementById('sortSelect').value;
+  const list = (listings || allListings).slice();
+
+  list.sort(function(a, b) {
+    if (sort === 'price_asc')  return (a.price || 0) - (b.price || 0);
+    if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
+    if (sort === 'area_desc')  return (b.area_sqm || 0) - (a.area_sqm || 0);
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  const count = list.length;
+  document.getElementById('resultsCount').textContent =
+    count + ' propert' + (count === 1 ? 'y' : 'ies') + ' · owner listed directly';
+
+  if (count === 0) {
+    document.getElementById('listingsGrid').innerHTML =
+      '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No properties found</div><div class="empty-sub">Try adjusting your filters or search term.</div></div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(l) {
+    var primaryPhoto = (l.listing_photos || []).find(function(p) { return p.is_primary; })
+                    || (l.listing_photos || [])[0];
+    var imgHtml = primaryPhoto
+      ? '<img src="' + primaryPhoto.url + '" alt="' + escHtml(l.title) + '" loading="lazy"/>'
+      : '<div class="card-img-placeholder">🏠</div>';
+
+    var price = 'EGP ' + Number(l.price).toLocaleString();
+    var perMonth = l.listing_type === 'rent' ? ' <span>/month</span>' : '';
+    var badgeClass = l.listing_type === 'sale' ? 'badge-sale' : 'badge-rent';
+    var badgeText  = l.listing_type === 'sale' ? 'For Sale' : 'For Rent';
+    var specs = [];
+    if (l.bedrooms)  specs.push('🛏 ' + l.bedrooms);
+    if (l.bathrooms) specs.push('🚿 ' + l.bathrooms);
+    if (l.area_sqm)  specs.push('📐 ' + l.area_sqm + ' m²');
+
+    html += '<div class="listing-card" onclick="openListing(\'' + l.id + '\')">'
+      + '<div class="card-img">'
+      + imgHtml
+      + '<div class="card-type-badge ' + badgeClass + '">' + badgeText + '</div>'
+      + '<button class="card-save" onclick="event.stopPropagation();saveListingPrompt()" title="Save">♡</button>'
+      + '<div class="owner-badge">✦ Owner Direct</div>'
+      + '</div>'
+      + '<div class="card-body">'
+      + '<div class="card-price">' + price + perMonth + '</div>'
+      + '<div class="card-title">' + escHtml(l.title) + '</div>'
+      + '<div class="card-location">📍 ' + escHtml(l.district) + (l.compound ? ' · ' + escHtml(l.compound) : '') + '</div>'
+      + '<div class="card-specs">'
+      + specs.map(function(s) { return '<div class="spec">' + s + '</div>'; }).join('')
+      + '</div>'
+      + '</div>'
+      + '<div class="card-footer">'
+      + '<button class="contact-btn" onclick="event.stopPropagation();contactOwner(\'' + l.id + '\')">Contact Owner</button>'
+      + '<button class="view-btn" onclick="event.stopPropagation();contactOwner(\'' + l.id + '\')">View →</button>'
+      + '</div>'
+      + '</div>';
+  });
+
+  document.getElementById('listingsGrid').innerHTML = html;
+}
+
+// ── FILTER CONTROLS ───────────────────────────────────────────────────────
+function setTypeFilter(val, el) {
+  typeFilter = val;
+  document.querySelectorAll('[data-filter]').forEach(function(c) { c.classList.remove('active'); });
+  el.classList.add('active');
+  filterListings();
+}
+
+function setBedsFilter(val, el) {
+  if (bedsFilter === val) {
+    bedsFilter = null;
+    el.classList.remove('active');
+  } else {
+    bedsFilter = val;
+    document.querySelectorAll('[data-beds]').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+  }
+  filterListings();
+}
+
+function toggleOwnerOnly(el) {
+  ownerOnly = !ownerOnly;
+  el.classList.toggle('active', ownerOnly);
+  filterListings();
+}
+
+// ── CONTACT / SAVE ────────────────────────────────────────────────────────
+async function contactOwner(listingId) {
+  // Check if logged in
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    window.location.href = 'messaging.html';
+  } else {
+    document.getElementById('signupOverlay').classList.add('show');
+  }
+}
+
+function saveListingPrompt() {
+  document.getElementById('signupOverlay').classList.add('show');
+}
+
+function openListing(listingId) {
+  document.getElementById('signupOverlay').classList.add('show');
+}
+
+function closeOverlay(e) {
+  if (!e || e.target === document.getElementById('signupOverlay')) {
+    document.getElementById('signupOverlay').classList.remove('show');
+  }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── SKELETON LOADING ──────────────────────────────────────────────────────
+function showSkeletons() {
+  var html = '';
+  for (var i = 0; i < 6; i++) {
+    html += '<div class="skel-card">'
+      + '<div class="skel-img skeleton"></div>'
+      + '<div class="skel-body">'
+      + '<div class="skel-line skeleton" style="height:20px;width:60%;margin-bottom:8px"></div>'
+      + '<div class="skel-line skeleton" style="height:14px;width:80%;margin-bottom:8px"></div>'
+      + '<div class="skel-line skeleton" style="height:12px;width:50%"></div>'
+      + '</div></div>';
+  }
+  document.getElementById('listingsGrid').innerHTML = html;
+  document.getElementById('resultsCount').textContent = 'Loading properties...';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadListings();
+</script>
+</body>
+</html>
