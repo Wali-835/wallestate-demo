@@ -3,92 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WallEstate — Real estate without brokers</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>WallEstate — Real estate without brokers · Cairo & Giza</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Manrope',sans-serif;background:#ffffff;color:#1a1a1a}
+body{font-family:'Manrope',sans-serif;background:#f5f4f1;color:#1a1a1a;min-height:100vh}
 
-/* Nav */
-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid #e6e4df;position:sticky;top:0;background:#fff;z-index:100}
-.nav-logo{display:flex;align-items:center;gap:12px}
-.nav-wordmark{font-size:14px;font-weight:700;letter-spacing:5px;color:#1a1a1a}
-.nav-links{display:flex;gap:28px;align-items:center}
-.nav-links a{font-size:12px;font-weight:600;color:#6b6b6b;text-decoration:none;letter-spacing:.3px}
-.nav-links a:hover{color:#1a1a1a}
-.nav-cta{padding:9px 20px;border-radius:20px;background:#C9A84C;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer}
+/* ── Nav ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:1px solid #e6e4df;position:sticky;top:0;z-index:200}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-wordmark{font-size:13px;font-weight:700;letter-spacing:5px;color:#1a1a1a}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-link{font-size:11px;font-weight:600;color:#6b6b6b;cursor:pointer;text-decoration:none}
+.nav-link:hover{color:#1a1a1a}
+.nav-btn{padding:8px 18px;border-radius:18px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;font-family:'Manrope',sans-serif;text-decoration:none;display:inline-block}
+.btn-gold{background:#C9A84C;color:#fff}
+.btn-dark{background:#1a1a1a;color:#fff}
+.btn-ghost{background:#fff;color:#1a1a1a;border:1.5px solid #e6e4df}
 
-/* Hero */
-.hero{padding:100px 40px 80px;max-width:1000px;margin:0 auto;text-align:center}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:#F5E9C8;color:#8B6914;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
-.hero-badge span{width:6px;height:6px;border-radius:50%;background:#C9A84C}
-.hero-title{font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;color:#1a1a1a}
+/* ── Banner ── */
+.banner{background:#F5E9C8;border-bottom:1px solid #e8d9a0;padding:9px 28px;text-align:center;font-size:11px;font-weight:700;color:#8B6914;letter-spacing:.5px}
+
+/* ── Search hero ── */
+.search-hero{background:#fff;padding:24px 28px 18px;border-bottom:1px solid #e6e4df}
+.hero-title{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:14px}
 .hero-title em{font-style:normal;color:#C9A84C}
-.hero-sub{font-size:16px;color:#6b6b6b;line-height:1.7;max-width:520px;margin:0 auto 36px}
-.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-primary{padding:14px 28px;border-radius:24px;background:#1a1a1a;color:#fff;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;display:inline-block}
-.btn-secondary{padding:14px 28px;border-radius:24px;background:#fff;color:#1a1a1a;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;display:inline-block;border:1.5px solid #e6e4df}
-.btn-gold{background:#C9A84C;color:#fff;border:none}
+.search-row{display:flex;gap:8px}
+.search-wrap{flex:1;position:relative}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#9a9a9a}
+.search-input{width:100%;padding:11px 14px 11px 36px;border-radius:8px;border:1.5px solid #e6e4df;background:#f5f4f1;font-family:'Manrope',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+.search-input:focus{border-color:#C9A84C;background:#fff}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.chip{padding:7px 13px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #e6e4df;background:#fff;color:#6b6b6b;white-space:nowrap;user-select:none;transition:all .12s}
+.chip:hover{border-color:#1a1a1a;color:#1a1a1a}
+.chip.sel{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.chip.gold-chip{background:#C9A84C;color:#fff;border-color:#C9A84C}
+.fsep{width:1px;height:18px;background:#e6e4df;flex-shrink:0}
 
-/* Stats */
-.stats{display:flex;justify-content:center;gap:60px;padding:48px 40px;background:#f5f4f1;flex-wrap:wrap}
-.stat-val{font-size:36px;font-weight:800;color:#1a1a1a;letter-spacing:-1px}
-.stat-lbl{font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-weight:600}
+/* ── Layout ── */
+.main{max-width:1200px;margin:0 auto;padding:20px 24px}
+.results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.results-count{font-size:12px;font-weight:600;color:#6b6b6b}
+.sort-sel{padding:7px 12px;border-radius:6px;border:1.5px solid #e6e4df;background:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:#1a1a1a;cursor:pointer;outline:none}
 
-/* How it works */
-.section{padding:80px 40px;max-width:1000px;margin:0 auto}
-.section-cap{display:flex;flex-direction:column;align-items:center;margin-bottom:52px;text-align:center}
-.section-cap-line{width:32px;height:3px;background:#C9A84C;border-radius:2px;margin-bottom:14px}
-.section-cap-title{font-size:32px;font-weight:800;letter-spacing:-1px;color:#1a1a1a}
-.section-cap-sub{font-size:14px;color:#6b6b6b;margin-top:8px;max-width:480px;line-height:1.6}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px}
-.step{padding:28px;border-radius:10px;border:1px solid #e6e4df}
-.step-num{width:36px;height:36px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:14px}
-.step-title{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
-.step-sub{font-size:12px;color:#6b6b6b;line-height:1.6}
-.step.gold .step-num{background:#C9A84C}
+/* ── Listing grid ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 16px 48px -12px rgba(0,0,0,.18)}
+.card-img{position:relative;height:192px;background:#e6e4df;overflow:hidden}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;background:#f0efec}
+.badge{position:absolute;top:10px;left:10px;padding:4px 9px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.badge-sale{background:#1a1a1a;color:#fff}
+.badge-rent{background:#C9A84C;color:#fff}
+.owner-badge{position:absolute;bottom:10px;left:10px;padding:3px 8px;border-radius:3px;background:rgba(201,168,76,.95);color:#fff;font-size:9px;font-weight:700}
+.save-btn{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.card-body{padding:14px}
+.card-price{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px}
+.card-price small{font-size:11px;font-weight:600;color:#9a9a9a}
+.card-title{font-size:13px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-loc{font-size:11px;color:#9a9a9a;margin-bottom:10px}
+.card-specs{display:flex;gap:10px;padding-top:10px;border-top:1px solid #f0efec;flex-wrap:wrap}
+.spec{font-size:11px;color:#6b6b6b;font-weight:600}
+.card-foot{padding:10px 14px;border-top:1px solid #f0efec}
+.contact-btn{width:100%;padding:9px;border-radius:8px;background:#C9A84C;color:#fff;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;border:none;cursor:pointer}
 
-/* Demo cards */
-.demos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-.demo-card{border-radius:10px;border:1px solid #e6e4df;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform .15s,box-shadow .15s}
-.demo-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px -10px rgba(0,0,0,.15)}
-.demo-card-top{padding:28px 24px 20px;background:#f5f4f1}
-.demo-icon{font-size:32px;margin-bottom:10px}
-.demo-title{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
-.demo-sub{font-size:11px;color:#9a9a9a;line-height:1.5}
-.demo-card-bot{padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.demo-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#C9A84C}
-.demo-arrow{font-size:14px;color:#C9A84C}
+/* ── Skeletons ── */
+.skeleton{background:linear-gradient(90deg,#f0efec 25%,#e6e4df 50%,#f0efec 75%);background-size:200% 100%;animation:shimmer 1.3s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.skel-card{background:#fff;border-radius:10px;border:1px solid #e6e4df;overflow:hidden}
 
-/* Why WallEstate */
-.why{background:#1a1a1a;padding:80px 40px;color:#fff}
-.why-inner{max-width:1000px;margin:0 auto}
-.why-title{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
-.why-sub{font-size:14px;color:#9a9a9a;margin-bottom:48px}
-.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px}
-.why-item{padding:24px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-.why-icon{font-size:24px;margin-bottom:12px}
-.why-item-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px}
-.why-item-sub{font-size:12px;color:#9a9a9a;line-height:1.6}
-.gold-text{color:#C9A84C}
+/* ── Empty ── */
+.empty{text-align:center;padding:60px 20px;color:#9a9a9a}
+.empty-icon{font-size:48px;margin-bottom:14px}
 
-/* Verified banner */
-.verified-banner{background:#F5E9C8;border-top:1px solid #e8d9a0;border-bottom:1px solid #e8d9a0;padding:14px 40px;text-align:center;font-size:12px;font-weight:700;color:#8B6914;letter-spacing:.5px}
+/* ── PROPERTY DETAIL VIEW ── */
+#detailView{display:none;position:fixed;inset:0;background:#f5f4f1;z-index:150;overflow-y:auto}
+.detail-nav{display:flex;align-items:center;gap:14px;padding:14px 24px;background:#fff;border-bottom:1px solid #e6e4df;position:sticky;top:0;z-index:10}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#1a1a1a;cursor:pointer;background:none;border:none;font-family:'Manrope',sans-serif}
+.detail-inner{max-width:900px;margin:0 auto;padding:24px}
+.photos-grid{display:grid;grid-template-columns:2fr 1fr;gap:8px;border-radius:10px;overflow:hidden;margin-bottom:24px;height:360px}
+.photo-main{height:100%;overflow:hidden}
+.photo-main img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-side{display:grid;grid-template-rows:1fr 1fr;gap:8px;height:100%}
+.photo-side img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-ph{width:100%;height:100%;background:#e6e4df;display:flex;align-items:center;justify-content:center;font-size:32px}
+.detail-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.detail-main{}
+.detail-price{font-size:28px;font-weight:800;letter-spacing:-.8px;margin-bottom:4px}
+.detail-price small{font-size:13px;font-weight:600;color:#9a9a9a}
+.detail-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.detail-loc{font-size:13px;color:#6b6b6b;margin-bottom:16px;display:flex;align-items:center;gap:5px}
+.detail-specs{display:flex;gap:16px;flex-wrap:wrap;padding:14px 0;border-top:1px solid #e6e4df;border-bottom:1px solid #e6e4df;margin-bottom:18px}
+.detail-spec{text-align:center}
+.detail-spec-val{font-size:18px;font-weight:800;color:#1a1a1a}
+.detail-spec-lbl{font-size:10px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-top:2px;font-weight:600}
+.section-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:12px;margin-top:18px}
+.desc{font-size:13px;color:#4a4a4a;line-height:1.8}
+.amenities-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.amenity-tag{padding:6px 12px;border-radius:16px;background:#f5f4f1;font-size:11px;font-weight:600;color:#4a4a4a;border:1px solid #e6e4df}
+/* Contact card */
+.contact-card{background:#fff;border-radius:10px;border:1px solid #e6e4df;padding:20px;position:sticky;top:80px}
+.contact-card-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.contact-card-sub{font-size:11px;color:#6b6b6b;margin-bottom:16px;line-height:1.5}
+.contact-card-btn{width:100%;padding:13px;border-radius:22px;background:#C9A84C;color:#fff;font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;margin-bottom:8px}
+.contact-card-sec{width:100%;padding:11px;border-radius:22px;background:#fff;color:#1a1a1a;font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1.5px solid #e6e4df;cursor:pointer;margin-bottom:14px}
+.trust-note{display:flex;align-items:flex-start;gap:8px;padding:12px;background:#f5f4f1;border-radius:6px;font-size:11px;color:#6b6b6b;line-height:1.5}
+.owner-verified{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F5E9C8;border-radius:6px;font-size:11px;font-weight:700;color:#8B6914;margin-bottom:12px}
 
-/* Footer */
-footer{padding:32px 40px;border-top:1px solid #e6e4df;display:flex;align-items:center;justify-content:space-between;flex-wrap:gap;gap:16px}
-.footer-left{font-size:11px;color:#9a9a9a}
-.footer-logo{display:flex;align-items:center;gap:8px}
-.footer-wordmark{font-size:12px;font-weight:700;letter-spacing:4px;color:#9a9a9a}
+/* ── Sign-up modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:32px 26px;max-width:340px;width:100%;text-align:center;position:relative}
+.modal-x{position:absolute;top:10px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:#9a9a9a}
+.modal-icon{font-size:42px;margin-bottom:12px}
+.modal-title{font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:8px;letter-spacing:-.3px}
+.modal-sub{font-size:12px;color:#6b6b6b;line-height:1.6;margin-bottom:20px}
+.modal-btn{display:block;padding:12px;border-radius:22px;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-decoration:none;margin-bottom:8px;border:none;cursor:pointer;width:100%;text-align:center}
 
-@media(max-width:600px){
-  nav{padding:14px 20px}
-  .hero{padding:60px 20px 48px}
-  .stats{gap:32px;padding:36px 20px}
-  .section{padding:52px 20px}
-  .why{padding:52px 20px}
-  footer{padding:24px 20px;flex-direction:column;text-align:center}
+@media(max-width:700px){
+  .photos-grid{grid-template-columns:1fr;height:240px}
+  .photo-side{display:none}
+  .detail-grid{grid-template-columns:1fr}
+  .contact-card{position:static}
+  nav,.detail-nav{padding:12px 16px}
+  .search-hero{padding:16px}
+  .main{padding:14px 16px}
 }
 </style>
 </head>
@@ -96,173 +137,354 @@ footer{padding:32px 40px;border-top:1px solid #e6e4df;display:flex;align-items:c
 
 <!-- Nav -->
 <nav>
-  <div class="nav-logo">
-    <svg viewBox="0 0 200 162" height="28"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
+  <div class="nav-logo" onclick="showBrowse()">
+    <svg viewBox="0 0 200 162" height="26"><rect x="2" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#1A1A1A"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#1A1A1A"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#1A1A1A"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
     <span class="nav-wordmark">WALLESTATE</span>
   </div>
-  <div class="nav-links">
-    <a href="browse.html" class="nav-link">Browse</a>
-    <a href="#how">How it works</a>
-    <a href="#why">Why WallEstate</a>
-    <a href="auth.html" class="nav-cta">List Property</a>
+  <div class="nav-right">
+    <a href="auth.html" class="nav-link">Sign In</a>
+    <a href="listings.html" class="nav-btn btn-gold">List Property</a>
   </div>
 </nav>
 
-<!-- Verified banner -->
-<div class="verified-banner">
-  ✦ Verified Owner Platform &mdash; Direct contact. No brokers. No commissions. Cairo &amp; Giza.
-</div>
+<div class="banner">✦ Verified Owner Platform — Direct contact. No brokers. No commissions. Cairo & Giza.</div>
 
-<!-- Hero -->
-<div class="hero">
-  <div class="hero-badge"><span></span>Beta — Cairo &amp; Giza</div>
-  <h1 class="hero-title">Real estate<br><em>without brokers</em></h1>
-  <p class="hero-sub">Connect directly with verified property owners in Cairo and Giza. No broker fees. No commissions. Just owners and buyers, directly.</p>
-  <div class="hero-actions">
-    <a href="browse.html" class="btn-primary btn-gold">Browse Properties</a>
-    <a href="auth.html" class="btn-secondary">List Your Property</a>
-  </div>
-</div>
-
-<!-- Stats -->
-<div class="stats">
-  <div style="text-align:center">
-    <div class="stat-val">2.5%</div>
-    <div class="stat-lbl">Broker fee you save</div>
-  </div>
-  <div style="text-align:center">
-    <div class="stat-val">EGP 0</div>
-    <div class="stat-lbl">Commission charged</div>
-  </div>
-  <div style="text-align:center">
-    <div class="stat-val">100%</div>
-    <div class="stat-lbl">Owner direct listings</div>
-  </div>
-  <div style="text-align:center">
-    <div class="stat-val">Cairo</div>
-    <div class="stat-lbl">&amp; Giza — launching now</div>
-  </div>
-</div>
-
-<!-- How it works -->
-<div class="section" id="how">
-  <div class="section-cap">
-    <div class="section-cap-line"></div>
-    <div class="section-cap-title">How WallEstate works</div>
-    <div class="section-cap-sub">Three steps to find or sell your property — directly, without paying anyone in the middle</div>
-  </div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-title">Owner lists directly</div>
-      <div class="step-sub">Verified property owners create listings with photos, price, and details. Identity and ownership are verified before going live.</div>
+<!-- ═══════════════════════════════════════════════════════
+     BROWSE VIEW
+═══════════════════════════════════════════════════════ -->
+<div id="browseView">
+  <div class="search-hero">
+    <div class="hero-title">Find your home in Cairo &amp; Giza — <em>direct from owners</em></div>
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="Search district, compound, or address..." oninput="filterListings()"/>
+      </div>
+      <button class="nav-btn btn-dark" onclick="filterListings()">Search</button>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-title">Buyer contacts owner</div>
-      <div class="step-sub">Buyers browse freely and message owners directly. Phone numbers stay masked until the owner chooses to share them.</div>
-    </div>
-    <div class="step gold">
-      <div class="step-num">3</div>
-      <div class="step-title">Deal happens directly</div>
-      <div class="step-sub">Owner and buyer agree terms, schedule viewings, and close — keeping 100% of the value between themselves. Zero commission.</div>
+    <div class="filter-row">
+      <div class="chip sel" data-filter="all" onclick="setType('all',this)">All</div>
+      <div class="chip" data-filter="sale" onclick="setType('sale',this)">For Sale</div>
+      <div class="chip" data-filter="rent" onclick="setType('rent',this)">For Rent</div>
+      <div class="fsep"></div>
+      <div class="chip" data-beds="1" onclick="setBeds('1',this)">1+ bed</div>
+      <div class="chip" data-beds="2" onclick="setBeds('2',this)">2+ beds</div>
+      <div class="chip" data-beds="3" onclick="setBeds('3',this)">3+ beds</div>
+      <div class="chip" data-beds="4" onclick="setBeds('4',this)">4+ beds</div>
+      <div class="fsep"></div>
+      <div class="chip gold-chip">✦ Owner Direct Only</div>
     </div>
   </div>
-</div>
 
-<!-- Demo cards -->
-<div class="section" id="demos" style="padding-top:0">
-  <div class="section-cap">
-    <div class="section-cap-line"></div>
-    <div class="section-cap-title">Try the beta</div>
-    <div class="section-cap-sub">These demos are connected to our live database — everything you do is real</div>
-  </div>
-  <div class="demos">
-    <a href="browse.html" class="demo-card">
-      <div class="demo-card-top">
-        <div class="demo-icon">🏠</div>
-        <div class="demo-title">Browse properties</div>
-        <div class="demo-sub">Search active listings in Cairo and Giza. No account needed to browse — sign up only when you want to contact an owner.</div>
-      </div>
-      <div class="demo-card-bot">
-        <span class="demo-label">For buyers</span>
-        <span class="demo-arrow">→</span>
-      </div>
-    </a>
-    <a href="auth.html" class="demo-card">
-      <div class="demo-card-top">
-        <div class="demo-icon">🔐</div>
-        <div class="demo-title">Create an account</div>
-        <div class="demo-sub">Sign up as an owner or buyer. Phone verification powered by Twilio.</div>
-      </div>
-      <div class="demo-card-bot">
-        <span class="demo-label">Get started</span>
-        <span class="demo-arrow">→</span>
-      </div>
-    </a>
-    <a href="listings.html" class="demo-card">
-      <div class="demo-card-top">
-        <div class="demo-icon">📋</div>
-        <div class="demo-title">List a property</div>
-        <div class="demo-sub">Create a real listing with photos, amenities, and pricing. Saved directly to our database.</div>
-      </div>
-      <div class="demo-card-bot">
-        <span class="demo-label">For owners</span>
-        <span class="demo-arrow">→</span>
-      </div>
-    </a>
+  <div class="main">
+    <div class="results-bar">
+      <div class="results-count" id="resultsCount">Loading properties...</div>
+      <select class="sort-sel" id="sortSel" onchange="renderCards()">
+        <option value="newest">Newest first</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="area_desc">Largest first</option>
+      </select>
+    </div>
+    <div class="grid" id="listingsGrid"></div>
   </div>
 </div>
 
-<!-- Why WallEstate -->
-<div class="why" id="why">
-  <div class="why-inner">
-    <div class="why-title">Why <span class="gold-text">WallEstate</span></div>
-    <div class="why-sub">Built for Cairo and Giza. Designed around owners, not brokers.</div>
-    <div class="why-grid">
-      <div class="why-item">
-        <div class="why-icon">✦</div>
-        <div class="why-item-title">Zero commission</div>
-        <div class="why-item-sub">Owners save 2.5% on every deal. On a 3M EGP apartment that's EGP 75,000 back in your pocket.</div>
+<!-- ═══════════════════════════════════════════════════════
+     DETAIL VIEW (public — no login required)
+═══════════════════════════════════════════════════════ -->
+<div id="detailView">
+  <div class="detail-nav">
+    <button class="back-btn" onclick="showBrowse()">← Back to listings</button>
+    <span id="detailBreadcrumb" style="font-size:12px;color:#9a9a9a"></span>
+  </div>
+  <div class="detail-inner">
+
+    <!-- Photo gallery -->
+    <div class="photos-grid" id="photosGrid"></div>
+
+    <div class="detail-grid">
+      <div class="detail-main">
+        <div class="detail-price" id="detailPrice"></div>
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-loc" id="detailLoc"></div>
+        <div class="detail-specs" id="detailSpecs"></div>
+
+        <div class="section-title">About this property</div>
+        <div class="desc" id="detailDesc">No description provided.</div>
+
+        <div class="section-title" id="amenitiesTitle" style="display:none">Amenities</div>
+        <div class="amenities-wrap" id="detailAmenities"></div>
+
+        <div class="section-title">Location</div>
+        <div style="background:#f5f4f1;border-radius:8px;padding:14px;font-size:12px;color:#6b6b6b;line-height:1.7" id="detailLocation"></div>
       </div>
-      <div class="why-item">
-        <div class="why-icon">🔒</div>
-        <div class="why-item-title">Masked contact</div>
-        <div class="why-item-sub">Your phone number stays private. Only share it when you're ready — you stay in control throughout.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-icon">🤖</div>
-        <div class="why-item-title">AI broker detection</div>
-        <div class="why-item-sub">Every message is screened for broker language in Arabic and English. Brokers are flagged and removed automatically.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-icon">📊</div>
-        <div class="why-item-title">Developments analyser</div>
-        <div class="why-item-sub">AI-powered analysis of off-plan projects — ROI estimates, developer track records, and market comparisons.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-icon">🇪🇬</div>
-        <div class="why-item-title">Built for Egypt</div>
-        <div class="why-item-sub">Fully bilingual Arabic and English with RTL support. Designed for how Egyptians actually buy and rent property.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-icon">✓</div>
-        <div class="why-item-title">Verified owners only</div>
-        <div class="why-item-sub">Every owner is identity and ownership verified before their listing goes live. No fake listings, no ghost properties.</div>
+
+      <div>
+        <div class="contact-card">
+          <div class="owner-verified">✦ Verified Owner — Direct listing</div>
+          <div class="contact-card-title">Interested in this property?</div>
+          <div class="contact-card-sub">Contact the owner directly — no broker fees, no commission. Just you and the owner.</div>
+          <button class="contact-card-btn" onclick="handleContact()">Contact Owner Directly</button>
+          <button class="contact-card-sec" onclick="handleContact()">📅 Book a Viewing</button>
+          <div class="trust-note">
+            🔒 Your phone number stays private until the owner chooses to share theirs. No spam, no brokers.
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- Footer -->
-<footer>
-  <div class="footer-logo">
-    <svg viewBox="0 0 200 162" height="22"><rect x="2" y="58" width="42" height="97" rx="2" fill="#9a9a9a"/><rect x="9" y="14" width="28" height="44" rx="2" fill="#9a9a9a"/><rect x="156" y="58" width="42" height="97" rx="2" fill="#9a9a9a"/><rect x="163" y="14" width="28" height="44" rx="2" fill="#9a9a9a"/><rect x="48" y="80" width="26" height="75" rx="2" fill="#9a9a9a"/><rect x="126" y="80" width="26" height="75" rx="2" fill="#9a9a9a"/><polygon points="78,155 122,155 119,56 81,56" fill="#C9A84C"/><rect x="88" y="46" width="24" height="10" rx="1" fill="#C9A84C"/><polygon points="100,30 88,46 112,46" fill="#C9A84C"/><rect x="2" y="157" width="196" height="3" rx="1.5" fill="#C9A84C"/></svg>
-    <span class="footer-wordmark">WALLESTATE</span>
+<!-- Sign-up / login modal -->
+<div class="overlay" id="authOverlay" onclick="closeOverlay(event)">
+  <div class="modal">
+    <button class="modal-x" onclick="closeOverlay()">✕</button>
+    <div class="modal-icon">🔑</div>
+    <div class="modal-title">Contact this owner</div>
+    <div class="modal-sub">Create a free account to message this owner directly. No broker fees. No commission. Your phone stays private until you both agree to share.</div>
+    <a href="auth.html" class="modal-btn btn-gold">Create Free Account</a>
+    <a href="auth.html" class="modal-btn btn-ghost" style="display:block;padding:12px;border-radius:22px;font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-decoration:none;text-align:center;color:#1a1a1a;border:1.5px solid #e6e4df">Sign In</a>
   </div>
-  <div class="footer-left">© 2026 WallEstate. Cairo & Giza, Egypt. Beta version.</div>
-  <div class="footer-left">Real estate without brokers.</div>
-</footer>
+</div>
 
+<script>
+const SUPABASE_URL      = 'https://zgxahfomijdghuadamjz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OwLPk219KFFwP-p_Q-1lbQ_eo7USPsZ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var allListings  = [];
+var typeFilter   = 'all';
+var bedsFilter   = null;
+var filteredList = [];
+
+// ── LOAD ALL LISTINGS ──────────────────────────────────────────────────────
+async function loadListings() {
+  showSkeletons();
+  var r = await sb
+    .from('listings')
+    .select('*, listing_photos(*), listing_amenities(*)')
+    .eq('status', 'active')
+    .order('listing_type', { ascending: true })   // sale first, then rent
+    .order('created_at', { ascending: false });
+
+  if (r.error) {
+    document.getElementById('listingsGrid').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div><p style="font-size:13px;color:#9a9a9a">' + r.error.message + '</p></div>';
+    return;
+  }
+  allListings = r.data || [];
+  filterListings();
+}
+
+// ── FILTER ─────────────────────────────────────────────────────────────────
+function filterListings() {
+  var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  filteredList = allListings.filter(function(l) {
+    if (typeFilter !== 'all' && l.listing_type !== typeFilter) return false;
+    if (bedsFilter && (l.bedrooms || 0) < parseInt(bedsFilter)) return false;
+    if (q) {
+      var hay = [l.title, l.district, l.compound, l.address, l.city].filter(Boolean).join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  renderCards();
+}
+
+// ── RENDER CARDS ───────────────────────────────────────────────────────────
+function renderCards() {
+  var sort = document.getElementById('sortSel').value;
+  var list = filteredList.slice();
+
+  list.sort(function(a, b) {
+    if (sort === 'price_asc')  return (a.price||0)-(b.price||0);
+    if (sort === 'price_desc') return (b.price||0)-(a.price||0);
+    if (sort === 'area_desc')  return (b.area_sqm||0)-(a.area_sqm||0);
+    // newest: sale first, then by date
+    if (a.listing_type === b.listing_type) return new Date(b.created_at)-new Date(a.created_at);
+    return a.listing_type === 'sale' ? -1 : 1;
+  });
+
+  var n = list.length;
+  document.getElementById('resultsCount').textContent =
+    n + ' propert' + (n===1?'y':'ies') + ' · listed directly by owners';
+
+  if (n === 0) {
+    document.getElementById('listingsGrid').innerHTML =
+      '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🏠</div><p style="font-size:13px;color:#9a9a9a">No properties match your filters.</p></div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(l) {
+    var ph = (l.listing_photos||[]).find(function(p){return p.is_primary;})||(l.listing_photos||[])[0];
+    var img = ph ? '<img src="'+ph.url+'" alt="'+esc(l.title)+'" loading="lazy"/>' : '<div class="card-img-ph">🏠</div>';
+    var price = 'EGP '+Number(l.price).toLocaleString();
+    var pm = l.listing_type==='rent' ? ' <small>/month</small>' : '';
+    var bc = l.listing_type==='sale' ? 'badge-sale' : 'badge-rent';
+    var bt = l.listing_type==='sale' ? 'For Sale' : 'For Rent';
+    var specs = [];
+    if (l.bedrooms)  specs.push('🛏 '+l.bedrooms+' bed'+(l.bedrooms>1?'s':''));
+    if (l.bathrooms) specs.push('🚿 '+l.bathrooms);
+    if (l.area_sqm)  specs.push('📐 '+l.area_sqm+' m²');
+
+    html += '<div class="card" onclick="openListing(\''+l.id+'\')">'
+      +'<div class="card-img">'+img
+      +'<div class="badge '+bc+'">'+bt+'</div>'
+      +'<div class="owner-badge">✦ Owner Direct</div>'
+      +'</div>'
+      +'<div class="card-body">'
+      +'<div class="card-price">'+price+pm+'</div>'
+      +'<div class="card-title">'+esc(l.title)+'</div>'
+      +'<div class="card-loc">📍 '+esc(l.district)+(l.compound?' · '+esc(l.compound):'')+'</div>'
+      +'<div class="card-specs">'+specs.map(function(s){return '<div class="spec">'+s+'</div>';}).join('')+'</div>'
+      +'</div>'
+      +'<div class="card-foot"><button class="contact-btn" onclick="event.stopPropagation();openListing(\''+l.id+'\')">View Property →</button></div>'
+      +'</div>';
+  });
+  document.getElementById('listingsGrid').innerHTML = html;
+}
+
+// ── OPEN LISTING DETAIL ────────────────────────────────────────────────────
+function openListing(listingId) {
+  var l = allListings.find(function(x){return x.id===listingId;});
+  if (!l) return;
+
+  // Photos grid
+  var photos = l.listing_photos || [];
+  var pgHtml = '';
+  if (photos.length === 0) {
+    pgHtml = '<div style="grid-column:1/-1;background:#f0efec;display:flex;align-items:center;justify-content:center;font-size:56px;border-radius:10px">🏠</div>';
+  } else {
+    var main = photos.find(function(p){return p.is_primary;})||photos[0];
+    pgHtml += '<div class="photo-main"><img src="'+main.url+'" alt="'+esc(l.title)+'"/></div>';
+    if (photos.length > 1) {
+      pgHtml += '<div class="photo-side">';
+      pgHtml += '<img src="'+photos[1].url+'" alt="photo 2"/>';
+      if (photos.length > 2) {
+        pgHtml += '<img src="'+photos[2].url+'" alt="photo 3"/>';
+      } else {
+        pgHtml += '<div class="photo-ph">+'+photos.length+' photos</div>';
+      }
+      pgHtml += '</div>';
+    }
+  }
+  document.getElementById('photosGrid').innerHTML = pgHtml;
+
+  // Price
+  var price = 'EGP '+Number(l.price).toLocaleString();
+  var pm = l.listing_type==='rent' ? ' <small style="font-size:14px;font-weight:600;color:#9a9a9a">/month</small>' : '';
+  document.getElementById('detailPrice').innerHTML = price+pm;
+
+  // Title & location
+  document.getElementById('detailTitle').textContent = l.title;
+  var loc = [l.district, l.compound, l.city].filter(Boolean).join(' · ');
+  document.getElementById('detailLoc').innerHTML = '📍 '+esc(loc);
+  document.getElementById('detailBreadcrumb').textContent = l.district+' · '+(l.listing_type==='sale'?'For Sale':'For Rent');
+
+  // Specs
+  var specs = [];
+  if (l.bedrooms)    specs.push({v:l.bedrooms,l:'Bedrooms'});
+  if (l.bathrooms)   specs.push({v:l.bathrooms,l:'Bathrooms'});
+  if (l.area_sqm)    specs.push({v:l.area_sqm+' m²',l:'Area'});
+  if (l.floor)       specs.push({v:'Floor '+l.floor,l:'Floor'});
+  document.getElementById('detailSpecs').innerHTML = specs.map(function(s){
+    return '<div class="detail-spec"><div class="detail-spec-val">'+s.v+'</div><div class="detail-spec-lbl">'+s.l+'</div></div>';
+  }).join('');
+
+  // Description
+  document.getElementById('detailDesc').textContent = l.description || 'The owner has not added a description yet.';
+
+  // Amenities
+  var ams = (l.listing_amenities||[]).map(function(a){return a.amenity.replace(/_/g,' ');});
+  if (ams.length > 0) {
+    document.getElementById('amenitiesTitle').style.display = 'block';
+    document.getElementById('detailAmenities').innerHTML = ams.map(function(a){
+      return '<div class="amenity-tag">'+a+'</div>';
+    }).join('');
+  } else {
+    document.getElementById('amenitiesTitle').style.display = 'none';
+    document.getElementById('detailAmenities').innerHTML = '';
+  }
+
+  // Location
+  var locParts = [];
+  if (l.address)   locParts.push('📌 '+l.address);
+  if (l.district)  locParts.push('🏘 District: '+l.district);
+  if (l.compound)  locParts.push('🏗 Compound: '+l.compound);
+  if (l.city)      locParts.push('🌆 City: '+l.city);
+  document.getElementById('detailLocation').innerHTML = locParts.join('<br>');
+
+  // Show detail view
+  document.getElementById('browseView').style.display = 'none';
+  document.getElementById('detailView').style.display = 'block';
+  window.scrollTo(0,0);
+  // Store current listing id for contact action
+  window._currentListingId = listingId;
+}
+
+// ── BACK TO BROWSE ─────────────────────────────────────────────────────────
+function showBrowse() {
+  document.getElementById('detailView').style.display = 'none';
+  document.getElementById('browseView').style.display = 'block';
+}
+
+// ── CONTACT OWNER (gated) ──────────────────────────────────────────────────
+async function handleContact() {
+  var r = await sb.auth.getUser();
+  if (r.data && r.data.user) {
+    window.location.href = 'messaging.html';
+  } else {
+    document.getElementById('authOverlay').classList.add('show');
+  }
+}
+
+function closeOverlay(e) {
+  if (!e || e.target===document.getElementById('authOverlay')) {
+    document.getElementById('authOverlay').classList.remove('show');
+  }
+}
+
+// ── FILTER CONTROLS ────────────────────────────────────────────────────────
+function setType(val, el) {
+  typeFilter = val;
+  document.querySelectorAll('[data-filter]').forEach(function(c){c.classList.remove('sel');});
+  el.classList.add('sel');
+  filterListings();
+}
+function setBeds(val, el) {
+  if (bedsFilter===val) { bedsFilter=null; el.classList.remove('sel'); }
+  else {
+    bedsFilter=val;
+    document.querySelectorAll('[data-beds]').forEach(function(c){c.classList.remove('sel');});
+    el.classList.add('sel');
+  }
+  filterListings();
+}
+
+// ── SKELETONS ──────────────────────────────────────────────────────────────
+function showSkeletons() {
+  var html = '';
+  for (var i=0;i<6;i++) {
+    html += '<div class="skel-card"><div style="height:192px" class="skeleton"></div>'
+      +'<div style="padding:14px">'
+      +'<div class="skeleton" style="height:20px;width:55%;border-radius:4px;margin-bottom:8px"></div>'
+      +'<div class="skeleton" style="height:14px;width:75%;border-radius:4px;margin-bottom:8px"></div>'
+      +'<div class="skeleton" style="height:12px;width:45%;border-radius:4px"></div>'
+      +'</div></div>';
+  }
+  document.getElementById('listingsGrid').innerHTML = html;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+loadListings();
+</script>
 </body>
 </html>
